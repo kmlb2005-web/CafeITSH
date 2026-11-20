@@ -25,7 +25,7 @@ Si un documento contradice al código, informar la diferencia y esperar decisió
   Módulos completos: autenticación/usuarios (Sprint 0) y menú de
   categorías/productos (Sprint 1); los demás módulos aún no existen.
 - `frontend/`: **vacío** — el proyecto Flutter todavía no se creó. Los comandos de Flutter más abajo aplican cuando exista.
-- `specs/`: `autenticacion-usuarios/` (Sprint 0), `menu/` (Sprint 1). `docs/`: `AGENTS.md`, `bitacora-desarrollo.md`, PDFs de pantallas.
+- `specs/`: `autenticacion-usuarios/` (Sprint 0), `menu/` (Sprint 1). `docs/`: `AGENTS.md`, `bitacora-desarrollo.md`, `sprints.md` (plan por sprints), `guia-colaborador.md` (estado del sistema y patrones del código), PDFs de pantallas.
 - Sin CI, sin linter, sin formatter, sin codegen. No inventar comandos de lint que no existen.
 - Avance y decisiones registrados en `docs/bitacora-desarrollo.md` (revisar antes de continuar).
 
