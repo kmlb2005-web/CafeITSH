@@ -43,6 +43,9 @@ public class ConfiguracionSeguridad {
                 .requestMatchers(HttpMethod.GET, "/api/prueba").permitAll()
                 // Menú público: solo consultas GET de categorías y productos
                 .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
+                // Pedidos: creación solo CLIENTE, consulta para usuarios autenticados
+                .requestMatchers(HttpMethod.POST, "/api/pedidos").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.GET, "/api/pedidos", "/api/pedidos/**").authenticated()
                 // Gestión de usuarios: solo ADMIN
                 .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
                 // Gestión de menú: solo ADMIN

@@ -16,7 +16,7 @@ contradicción, esos documentos mandan**.
 
 Si un documento contradice al código, **informar la diferencia y esperar decisión**.
 
-## 2. Estado actual del sistema (19/11/2026)
+## 2. Estado actual del sistema (20/11/2026)
 
 ### Stack
 
@@ -32,7 +32,8 @@ Si un documento contradice al código, **informar la diferencia y esperar decisi
 
 - **Sprint 0** ✅ — base transversal: Flyway, seguridad JWT, autenticación y usuarios.
 - **Sprint 1** ✅ — menú: categorías y productos.
-- **Sprints 2–5** pendientes — ver alcance y preguntas abiertas en `docs/sprints.md`.
+- **Sprint 2** ✅ — pedidos: creación y consulta (transiciones de estado diferidas a Sprints 3-4).
+- **Sprints 3–5** pendientes — ver alcance y preguntas abiertas en `docs/sprints.md`.
 
 ### Tablas y migraciones
 
@@ -40,8 +41,9 @@ Si un documento contradice al código, **informar la diferencia y esperar decisi
 |---|---|
 | `V1__crear_tabla_usuarios.sql` | `usuarios` |
 | `V2__crear_tablas_menu.sql` | `categorias`, `productos` |
+| `V3__crear_tablas_pedidos.sql` | `pedidos`, `pedido_items` |
 
-Pendiente: `pedidos` y `pedido_items` (Sprint 2 → `V3`), `pagos` (Sprint 3).
+Pendiente: `pagos` y flujo de caja (Sprint 3).
 
 ### Roles
 
@@ -67,14 +69,19 @@ Pendiente: `pedidos` y `pedido_items` (Sprint 2 → `V3`), `pagos` (Sprint 3).
 | POST | `/api/productos` | ADMIN → 201 |
 | PUT | `/api/productos/{id}` | ADMIN |
 | PUT | `/api/productos/{id}/desactivar` | ADMIN |
+| POST | `/api/pedidos` | CLIENTE (crea pedido en `PENDIENTE`) |
+| GET | `/api/pedidos` | autenticado (CLIENTE: propios; CAJA/COCINA/ADMIN: todos) |
+| GET | `/api/pedidos/{id}` | autenticado (CLIENTE solo dueño) |
 | GET | `/api/prueba` | público (endpoint de prueba heredado; no eliminar) |
+
+> Pedidos: sin endpoints de edición, DELETE ni transiciones de estado en Sprint 2. Hora de entrega validada en `America/Mexico_City` dentro del horario de servicio configurable (`cafeitsh.horario-apertura`, `cafeitsh.horario-cierre`, `cafeitsh.tiempo-preparacion-minutos`, `cafeitsh.margen-cierre-minutos` en `application.yaml`; valores iniciales `08:00`, `20:00`, `15`, `15`). La entrega no exige alineación a una grilla de franjas.
 
 ### Pruebas
 
-- **45 pruebas** en verde (`mvnw.cmd test`) contra la BD real — no hay H2 ni Testcontainers.
+- **71 pruebas** en verde (`mvnw.cmd test`) contra la BD real — no hay H2 ni Testcontainers.
 - Archivos: `ControladorAutenticacionTests` (9), `ControladorMenuTests` (13),
-  `ServicioJwtTests` (6), `ServicioCategoriaTests` (8), `ServicioProductoTests` (8),
-  `BackendApplicationTests` (1).
+  `ControladorPedidoTests` (9), `ServicioJwtTests` (6), `ServicioCategoriaTests` (8),
+  `ServicioProductoTests` (8), `ServicioPedidoTests` (17), `BackendApplicationTests` (1).
 
 ## 3. Cómo se trabaja (ciclo por sprint)
 
@@ -143,9 +150,7 @@ mvnw.cmd spring-boot:run   # arranca en http://localhost:8081
 - No introducir datos de tarjetas bancarias; secretos solo en variables de entorno, nunca en Git.
 - No borrar datos ni volúmenes de Docker.
 - Nunca afirmar pruebas que no se ejecutaron (`mvnw.cmd test` + `mvnw.cmd package`).
-- Reglas de negocio de pedidos (resumen en `docs/AGENTS.md` §9): mínimo **10 minutos**
-  de anticipación; estados **Pendiente → Pagado → En preparación → Listo → Entregado**
-  más **Cancelado**; no modificar estados ni transiciones sin aprobación.
+- Reglas de negocio de pedidos (resumen en `docs/AGENTS.md` §9 y `specs/pedidos/spec.md`): pedido anticipado del **mismo día** (`America/Mexico_City`) dentro del **horario de servicio configurable** (apertura/cierre, tiempo de preparación/lead y margen antes del cierre; la hora no exige alineación a grilla), inmutable al crearse en `PENDIENTE` (Sprint 2 sin transiciones); estados **Pendiente → Pagado → En preparación → Listo → Entregado** más **Cancelado**; no modificar estados ni transiciones sin aprobación.
 
 ## 7. Dónde registrar el progreso
 

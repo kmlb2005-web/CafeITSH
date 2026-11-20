@@ -265,9 +265,13 @@ La autorización debe verificarse en el backend, no solamente ocultando botones 
 
 Las reglas de negocio de pedidos deben respetarse en frontend y backend.
 
-Regla inicial:
+Regla vigente (ajustada y aprobada, detallada en `specs/pedidos/spec.md`):
 
-- Los pedidos deben realizarse con un mínimo de 10 minutos de anticipación.
+- Los pedidos son anticipados del **mismo día**, con zona horaria `America/Mexico_City`, y solo pueden realizarse dentro del **horario de servicio**.
+- La hora de entrega debe cumplir: `entrega >= ahora + tiempoPreparacionMinutos` (lead time), `entrega <= horaCierre - margenCierreMinutos` (margen antes del cierre) y estar dentro del horario de servicio. Si `ahora + tiempoPreparacionMinutos` es anterior a la apertura del mismo día, el mínimo efectivo es la apertura.
+- La hora de entrega **no** exige alineación a una cuadrícula/franja exacta (p. ej. múltiplos de 10 minutos); se acepta cualquier hora válida dentro del rango.
+- Parámetros configurables en `application.yaml` (no secretos): `cafeitsh.horario-apertura` (inicial `08:00`), `cafeitsh.horario-cierre` (`20:00`), `cafeitsh.tiempo-preparacion-minutos` (`15`), `cafeitsh.margen-cierre-minutos` (`15`).
+- El pedido se crea en **PENDIENTE** y es inmutable tras su creación (Sprint 2: sin endpoints de edición ni de transición de estado).
 
 Estados contemplados para los pedidos:
 
