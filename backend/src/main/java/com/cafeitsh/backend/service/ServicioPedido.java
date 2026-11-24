@@ -1,17 +1,21 @@
 package com.cafeitsh.backend.service;
 
+import com.cafeitsh.backend.dto.RespuestaCancelacionPedido;
 import com.cafeitsh.backend.dto.RespuestaClientePedido;
 import com.cafeitsh.backend.dto.RespuestaItemPedido;
+import com.cafeitsh.backend.dto.RespuestaPago;
 import com.cafeitsh.backend.dto.RespuestaPedido;
 import com.cafeitsh.backend.dto.SolicitudCreacionPedido;
 import com.cafeitsh.backend.dto.SolicitudItemPedido;
 import com.cafeitsh.backend.entity.EstadoPedido;
+import com.cafeitsh.backend.entity.Pago;
 import com.cafeitsh.backend.entity.Pedido;
 import com.cafeitsh.backend.entity.PedidoItem;
 import com.cafeitsh.backend.entity.Producto;
 import com.cafeitsh.backend.entity.Rol;
 import com.cafeitsh.backend.entity.Usuario;
 import com.cafeitsh.backend.exception.ExcepcionNegocio;
+import com.cafeitsh.backend.repository.PagoRepository;
 import com.cafeitsh.backend.repository.PedidoRepository;
 import com.cafeitsh.backend.repository.ProductoRepository;
 import com.cafeitsh.backend.repository.UsuarioRepository;
@@ -41,6 +45,7 @@ public class ServicioPedido {
     private final PedidoRepository pedidos;
     private final ProductoRepository productos;
     private final UsuarioRepository usuarios;
+    private final PagoRepository pagos;
     private final LocalTime horaApertura;
     private final LocalTime horaCierre;
     private final int tiempoPreparacionMinutos;
@@ -49,6 +54,7 @@ public class ServicioPedido {
     public ServicioPedido(PedidoRepository pedidos,
                           ProductoRepository productos,
                           UsuarioRepository usuarios,
+                          PagoRepository pagos,
                           @Value("${cafeitsh.horario-apertura:08:00}") String horarioApertura,
                           @Value("${cafeitsh.horario-cierre:20:00}") String horarioCierre,
                           @Value("${cafeitsh.tiempo-preparacion-minutos:15}") int tiempoPreparacionMinutos,
@@ -56,6 +62,7 @@ public class ServicioPedido {
         this.pedidos = pedidos;
         this.productos = productos;
         this.usuarios = usuarios;
+        this.pagos = pagos;
         this.horaApertura = LocalTime.parse(horarioApertura);
         this.horaCierre = LocalTime.parse(horarioCierre);
         this.tiempoPreparacionMinutos = tiempoPreparacionMinutos;
@@ -234,7 +241,7 @@ public class ServicioPedido {
         return String.format("%02d:%02d", hora.getHour(), hora.getMinute());
     }
 
-    private RespuestaPedido aRespuesta(Pedido pedido) {
+    RespuestaPedido aRespuesta(Pedido pedido) {
         Usuario usuario = pedido.getUsuario();
         RespuestaClientePedido cliente = new RespuestaClientePedido(
                 usuario.getId(), usuario.getNombre(), usuario.getCorreo());
@@ -248,6 +255,24 @@ public class ServicioPedido {
                         i.getSubtotal()))
                 .toList();
 
+        RespuestaPago pago = pagos.findFirstByPedidoIdOrderByFechaPagoDesc(pedido.getId())
+                .map(this::aRespuestaPago)
+                .orElse(null);
+
+        RespuestaCancelacionPedido cancelacion = null;
+        if (pedido.getEstado() == EstadoPedido.CANCELADO || pedido.getCanceladoEn() != null) {
+            RespuestaClientePedido canceladoPor = pedido.getCanceladoPor() == null ? null
+                    : new RespuestaClientePedido(pedido.getCanceladoPor().getId(),
+                    pedido.getCanceladoPor().getNombre(), pedido.getCanceladoPor().getCorreo());
+            cancelacion = new RespuestaCancelacionPedido(
+                    pedido.getCanceladoEn(),
+                    canceladoPor,
+                    pedido.getMotivoCancelacion(),
+                    pedido.isRequiereReembolso(),
+                    pedido.isReembolsoManualRegistrado(),
+                    pedido.getObservacionReembolso());
+        }
+
         return new RespuestaPedido(
                 pedido.getId(),
                 pedido.getEstado(),
@@ -256,6 +281,19 @@ public class ServicioPedido {
                 pedido.getTotal(),
                 cliente,
                 items,
-                pedido.getCreadoEn());
+                pedido.getCreadoEn(),
+                pago,
+                cancelacion);
+    }
+
+    private RespuestaPago aRespuestaPago(Pago pago) {
+        Usuario registradoPor = pago.getRegistradoPor();
+        return new RespuestaPago(
+                pago.getId(),
+                pago.getMetodoPago(),
+                pago.getMonto(),
+                pago.getFechaPago(),
+                new RespuestaClientePedido(registradoPor.getId(), registradoPor.getNombre(), registradoPor.getCorreo()),
+                pago.getReferencia());
     }
 }

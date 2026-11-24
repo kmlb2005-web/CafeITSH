@@ -333,3 +333,57 @@ Pruebas contra MySQL real en Docker (puerto 3307) con `V3` aplicada. Se ajustó 
 - Sprint 4 (Cocina): transiciones `PAGADO -> EN_PREPARACION -> LISTO`
   y definición de quién marca `ENTREGADO`.
 - CORS sigue restringido a orígenes de desarrollo.
+
+---
+
+## Sprint 3 — Caja: pago, cancelación y corte básico (23/11/2026)
+
+### Objetivo
+
+Implementar el flujo de caja: registro de pago PENDIENTE -> PAGADO por CAJA/ADMIN, cancelación controlada por rol/estado con auditoría, y corte básico diario en zona America/Mexico_City.
+
+### Spec asociada
+
+specs/caja/spec.md (aprobada).
+
+### Archivos creados
+
+| Archivo | Contenido |
+|---|---|
+| specs/caja/spec.md | Especificación del módulo de caja |
+| ackend/.../db/migraciones/V4__crear_tabla_pagos_y_auditoria_cancelacion.sql | Tabla pagos y campos de auditoría de cancelación/reembolso en pedidos |
+| ackend/.../entity/MetodoPago.java, Pago.java | Catálogo de pago real y entidad de pago |
+| ackend/.../repository/PagoRepository.java | Consultas de pagos y rango por fecha |
+| ackend/.../dto/SolicitudRegistroPago.java, SolicitudCancelacionPedido.java | DTOs de entrada |
+| ackend/.../dto/RespuestaPago.java, RespuestaCancelacionPedido.java, RespuestaDesglosePago.java, RespuestaCanceladosCorte.java, RespuestaCorteCaja.java | DTOs de salida |
+| ackend/.../service/ServicioCaja.java | Reglas de pago, cancelación, reembolso manual y corte |
+| ackend/.../controller/ControladorCaja.java | Endpoints de pago, cancelación y corte |
+| ackend/src/test/.../service/ServicioCajaTests.java | Pruebas unitarias |
+| ackend/src/test/.../controller/ControladorCajaTests.java | Pruebas de integración MockMvc |
+
+### Archivos modificados
+
+- ackend/.../entity/MetodoPagoPreferido.java: agrega TRANSFERENCIA.
+- ackend/.../entity/Pedido.java: campos de cancelación/reembolso manual y relación con pagos.
+- ackend/.../dto/RespuestaPedido.java, service/ServicioPedido.java: incluyen pago y cancelacion cuando aplica.
+- ackend/.../repository/PedidoRepository.java: consulta de cancelados por rango.
+- ackend/.../config/ConfiguracionSeguridad.java: reglas para /api/pedidos/*/pago, /api/pedidos/*/cancelar, /api/caja/**.
+- ackend/src/test/.../service/ServicioPedidoTests.java: constructor actualizado con PagoRepository.
+
+### Pruebas ejecutadas
+
+`cmd
+cd backend
+set DB_PASSWORD=<valor de database/.env>
+set JWT_SECRET=<secreto >= 32 caracteres>
+mvnw.cmd test      → Tests run: 83, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS
+mvnw.cmd package   → BUILD SUCCESS (jar backend-0.0.1-SNAPSHOT.jar)
+`
+
+### Decisiones tomadas
+
+- Métodos aceptados: EFECTIVO y TRANSFERENCIA; sin datos de tarjeta ni integración bancaria.
+- Intención metodoPagoPreferido ampliada a EFECTIVO_EN_CAJA y TRANSFERENCIA; pago real en tabla pagos.
+- Cancelación: CLIENTE solo PENDIENTE propio; CAJA/ADMIN PENDIENTE o PAGADO antes de EN_PREPARACION; no cancelable en estados posteriores. Motivo/actor/fecha obligatorios.
+- Sin reembolsos automáticos ni ajustes de monto; se registra constancia manual de reembolso cuando aplica.
+- Corte básico diario por fecha de pago en America/Mexico_City: solo pagados del día, desglose por método y contador informativo de cancelados sin sumar al ingreso neto; sin rangos.

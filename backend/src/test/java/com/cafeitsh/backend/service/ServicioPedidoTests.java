@@ -16,6 +16,7 @@ import com.cafeitsh.backend.entity.Producto;
 import com.cafeitsh.backend.entity.Rol;
 import com.cafeitsh.backend.entity.Usuario;
 import com.cafeitsh.backend.exception.ExcepcionNegocio;
+import com.cafeitsh.backend.repository.PagoRepository;
 import com.cafeitsh.backend.repository.PedidoRepository;
 import com.cafeitsh.backend.repository.ProductoRepository;
 import com.cafeitsh.backend.repository.UsuarioRepository;
@@ -48,12 +49,15 @@ class ServicioPedidoTests {
     @Mock
     private UsuarioRepository repositorioUsuarios;
 
+    @Mock
+    private PagoRepository repositorioPagos;
+
     private ServicioPedido servicio;
 
     @BeforeEach
     void configurar() {
         servicio = new ServicioPedido(repositorioPedidos, repositorioProductos,
-                repositorioUsuarios, "08:00", "20:00", 15, 15);
+                repositorioUsuarios, repositorioPagos, "08:00", "20:00", 15, 15);
     }
 
     @Test
@@ -166,7 +170,7 @@ class ServicioPedidoTests {
         LocalDateTime ahora = LocalDateTime.of(2026, 11, 20, 11, 0);
         LocalDateTime entrega = LocalDateTime.of(2026, 11, 20, 11, 20);
         ServicioPedido servicioControlado = new ServicioPedido(repositorioPedidos,
-                repositorioProductos, repositorioUsuarios, "08:00", "20:00", 15, 15) {
+                repositorioProductos, repositorioUsuarios, repositorioPagos, "08:00", "20:00", 15, 15) {
             @Override
             LocalDateTime ahoraMexico() {
                 return ahora;
@@ -314,7 +318,7 @@ class ServicioPedidoTests {
 
     private ServicioPedido servicioConAhora(LocalDateTime ahora) {
         return new ServicioPedido(repositorioPedidos, repositorioProductos,
-                repositorioUsuarios, "08:00", "20:00", 15, 15) {
+                repositorioUsuarios, repositorioPagos, "08:00", "20:00", 15, 15) {
             @Override
             LocalDateTime ahoraMexico() {
                 return ahora;

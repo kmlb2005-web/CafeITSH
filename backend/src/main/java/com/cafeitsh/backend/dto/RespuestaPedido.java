@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Respuesta de un pedido con su detalle de ?tems.
+ * DTO de salida de pedido. Incluye información de pago/cancelación cuando aplica.
  */
 public record RespuestaPedido(
         Long id,
@@ -17,6 +17,8 @@ public record RespuestaPedido(
         BigDecimal total,
         RespuestaClientePedido cliente,
         List<RespuestaItemPedido> items,
-        LocalDateTime creadoEn
+        LocalDateTime creadoEn,
+        RespuestaPago pago,
+        RespuestaCancelacionPedido cancelacion
 ) {
 }

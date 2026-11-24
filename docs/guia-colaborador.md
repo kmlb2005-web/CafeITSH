@@ -32,19 +32,18 @@ Si un documento contradice al código, **informar la diferencia y esperar decisi
 
 - **Sprint 0** ✅ — base transversal: Flyway, seguridad JWT, autenticación y usuarios.
 - **Sprint 1** ✅ — menú: categorías y productos.
-- **Sprint 2** ✅ — pedidos: creación y consulta (transiciones de estado diferidas a Sprints 3-4).
-- **Sprints 3–5** pendientes — ver alcance y preguntas abiertas en `docs/sprints.md`.
+- **Sprint 2** ✅ — pedidos: creación y consulta (horario/ventana configurable; transiciones diferidas).
+- **Sprint 3** ✅ — caja: pago, cancelación y corte básico.
+- **Sprints 4–5** pendientes — ver alcance en docs/sprints.md.
 
 ### Tablas y migraciones
 
-| Migración | Tablas |
+| Migración | Tablas / cambios |
 |---|---|
-| `V1__crear_tabla_usuarios.sql` | `usuarios` |
-| `V2__crear_tablas_menu.sql` | `categorias`, `productos` |
-| `V3__crear_tablas_pedidos.sql` | `pedidos`, `pedido_items` |
-
-Pendiente: `pagos` y flujo de caja (Sprint 3).
-
+| V1__crear_tabla_usuarios.sql | usuarios |
+| V2__crear_tablas_menu.sql | categorias, productos |
+| V3__crear_tablas_pedidos.sql | pedidos, pedido_items |
+| V4__crear_tabla_pagos_y_auditoria_cancelacion.sql | pagos y auditoría de cancelación/reembolso en pedidos |
 ### Roles
 
 `Rol`: **ADMIN, CAJA, COCINA, CLIENTE** (catálogo fijo en `entity/Rol.java`).
@@ -72,16 +71,19 @@ Pendiente: `pagos` y flujo de caja (Sprint 3).
 | POST | `/api/pedidos` | CLIENTE (crea pedido en `PENDIENTE`) |
 | GET | `/api/pedidos` | autenticado (CLIENTE: propios; CAJA/COCINA/ADMIN: todos) |
 | GET | `/api/pedidos/{id}` | autenticado (CLIENTE solo dueño) |
+| POST | `/api/pedidos/{id}/pago` | CAJA/ADMIN (registra pago, `PENDIENTE -> PAGADO`) |
+| POST | `/api/pedidos/{id}/cancelar` | autenticado (CLIENTE propio `PENDIENTE`; CAJA/ADMIN `PENDIENTE` o `PAGADO` antes de `EN_PREPARACION`) |
+| GET | `/api/caja/corte?fecha=YYYY-MM-DD` | CAJA/ADMIN (corte diario, zona `America/Mexico_City`) |
 | GET | `/api/prueba` | público (endpoint de prueba heredado; no eliminar) |
 
-> Pedidos: sin endpoints de edición, DELETE ni transiciones de estado en Sprint 2. Hora de entrega validada en `America/Mexico_City` dentro del horario de servicio configurable (`cafeitsh.horario-apertura`, `cafeitsh.horario-cierre`, `cafeitsh.tiempo-preparacion-minutos`, `cafeitsh.margen-cierre-minutos` en `application.yaml`; valores iniciales `08:00`, `20:00`, `15`, `15`). La entrega no exige alineación a una grilla de franjas.
+> Pedidos: sin endpoints de edición ni DELETE. Sprint 3 agrega pago/cancelación/corte; transiciones de cocina/entrega quedan para Sprint 4. Entrega validada en `America/Mexico_City` dentro del horario de servicio configurable (`cafeitsh.horario-apertura`, `cafeitsh.horario-cierre`, `cafeitsh.tiempo-preparacion-minutos`, `cafeitsh.margen-cierre-minutos`; iniciales `08:00`, `20:00`, `15`, `15`), sin exigir alineación a grilla.
 
 ### Pruebas
 
-- **71 pruebas** en verde (`mvnw.cmd test`) contra la BD real — no hay H2 ni Testcontainers.
+- **83 pruebas** en verde (`mvnw.cmd test`) contra la BD real — no hay H2 ni Testcontainers.
 - Archivos: `ControladorAutenticacionTests` (9), `ControladorMenuTests` (13),
-  `ControladorPedidoTests` (9), `ServicioJwtTests` (6), `ServicioCategoriaTests` (8),
-  `ServicioProductoTests` (8), `ServicioPedidoTests` (17), `BackendApplicationTests` (1).
+  `ControladorPedidoTests` (9), `ControladorCajaTests` (5), `ServicioJwtTests` (6), `ServicioCategoriaTests` (8),
+  `ServicioProductoTests` (8), `ServicioPedidoTests` (17), `ServicioCajaTests` (7), `BackendApplicationTests` (1).
 
 ## 3. Cómo se trabaja (ciclo por sprint)
 

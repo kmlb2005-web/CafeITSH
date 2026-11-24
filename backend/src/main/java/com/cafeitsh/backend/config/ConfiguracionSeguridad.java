@@ -46,6 +46,10 @@ public class ConfiguracionSeguridad {
                 // Pedidos: creación solo CLIENTE, consulta para usuarios autenticados
                 .requestMatchers(HttpMethod.POST, "/api/pedidos").hasRole("CLIENTE")
                 .requestMatchers(HttpMethod.GET, "/api/pedidos", "/api/pedidos/**").authenticated()
+                // Caja: pago y corte CAJA/ADMIN; cancelación autenticada con reglas en servicio
+                .requestMatchers(HttpMethod.POST, "/api/pedidos/*/pago").hasAnyRole("CAJA", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/pedidos/*/cancelar").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/caja/**").hasAnyRole("CAJA", "ADMIN")
                 // Gestión de usuarios: solo ADMIN
                 .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
                 // Gestión de menú: solo ADMIN

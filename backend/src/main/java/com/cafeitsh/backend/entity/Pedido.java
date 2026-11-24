@@ -56,8 +56,30 @@ public class Pedido {
     @Column(name = "actualizado_en")
     private LocalDateTime actualizadoEn;
 
+    @Column(name = "cancelado_en")
+    private LocalDateTime canceladoEn;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cancelado_por_usuario_id")
+    private Usuario canceladoPor;
+
+    @Column(name = "motivo_cancelacion", length = 255)
+    private String motivoCancelacion;
+
+    @Column(name = "requiere_reembolso", nullable = false)
+    private boolean requiereReembolso = false;
+
+    @Column(name = "reembolso_manual_registrado", nullable = false)
+    private boolean reembolsoManualRegistrado = false;
+
+    @Column(name = "observacion_reembolso", length = 255)
+    private String observacionReembolso;
+
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PedidoItem> items = new ArrayList<>();
+
+    @OneToMany(mappedBy = "pedido", fetch = FetchType.LAZY)
+    private List<Pago> pagos = new ArrayList<>();
 
     @PrePersist
     void alCrear() {
@@ -128,5 +150,57 @@ public class Pedido {
 
     public List<PedidoItem> getItems() {
         return items;
+    }
+
+    public LocalDateTime getCanceladoEn() {
+        return canceladoEn;
+    }
+
+    public void setCanceladoEn(LocalDateTime canceladoEn) {
+        this.canceladoEn = canceladoEn;
+    }
+
+    public Usuario getCanceladoPor() {
+        return canceladoPor;
+    }
+
+    public void setCanceladoPor(Usuario canceladoPor) {
+        this.canceladoPor = canceladoPor;
+    }
+
+    public String getMotivoCancelacion() {
+        return motivoCancelacion;
+    }
+
+    public void setMotivoCancelacion(String motivoCancelacion) {
+        this.motivoCancelacion = motivoCancelacion;
+    }
+
+    public boolean isRequiereReembolso() {
+        return requiereReembolso;
+    }
+
+    public void setRequiereReembolso(boolean requiereReembolso) {
+        this.requiereReembolso = requiereReembolso;
+    }
+
+    public boolean isReembolsoManualRegistrado() {
+        return reembolsoManualRegistrado;
+    }
+
+    public void setReembolsoManualRegistrado(boolean reembolsoManualRegistrado) {
+        this.reembolsoManualRegistrado = reembolsoManualRegistrado;
+    }
+
+    public String getObservacionReembolso() {
+        return observacionReembolso;
+    }
+
+    public void setObservacionReembolso(String observacionReembolso) {
+        this.observacionReembolso = observacionReembolso;
+    }
+
+    public List<Pago> getPagos() {
+        return pagos;
     }
 }
