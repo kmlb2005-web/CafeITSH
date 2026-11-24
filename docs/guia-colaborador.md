@@ -16,7 +16,7 @@ contradicción, esos documentos mandan**.
 
 Si un documento contradice al código, **informar la diferencia y esperar decisión**.
 
-## 2. Estado actual del sistema (20/11/2026)
+## 2. Estado actual del sistema (24/11/2026)
 
 ### Stack
 
@@ -34,7 +34,9 @@ Si un documento contradice al código, **informar la diferencia y esperar decisi
 - **Sprint 1** ✅ — menú: categorías y productos.
 - **Sprint 2** ✅ — pedidos: creación y consulta (horario/ventana configurable; transiciones diferidas).
 - **Sprint 3** ✅ — caja: pago, cancelación y corte básico.
-- **Sprints 4–5** pendientes — ver alcance en docs/sprints.md.
+- **Sprint 4** — cocina: vista de pendientes y transiciones implementadas en la rama
+  `sprint-4-cocina`; pendiente de verificación completa.
+- **Sprint 5** pendiente — ver alcance en docs/sprints.md.
 
 ### Tablas y migraciones
 
@@ -74,16 +76,23 @@ Si un documento contradice al código, **informar la diferencia y esperar decisi
 | POST | `/api/pedidos/{id}/pago` | CAJA/ADMIN (registra pago, `PENDIENTE -> PAGADO`) |
 | POST | `/api/pedidos/{id}/cancelar` | autenticado (CLIENTE propio `PENDIENTE`; CAJA/ADMIN `PENDIENTE` o `PAGADO` antes de `EN_PREPARACION`) |
 | GET | `/api/caja/corte?fecha=YYYY-MM-DD` | CAJA/ADMIN (corte diario, zona `America/Mexico_City`) |
+| GET | `/api/cocina/pedidos` | COCINA/ADMIN (pedidos `PAGADO`) |
+| POST | `/api/pedidos/{id}/en-preparacion` | COCINA/ADMIN (`PAGADO -> EN_PREPARACION`) |
+| POST | `/api/pedidos/{id}/listo` | COCINA/ADMIN (`EN_PREPARACION -> LISTO`) |
+| POST | `/api/pedidos/{id}/entregado` | COCINA/CAJA/ADMIN (`LISTO -> ENTREGADO`) |
 | GET | `/api/prueba` | público (endpoint de prueba heredado; no eliminar) |
 
-> Pedidos: sin endpoints de edición ni DELETE. Sprint 3 agrega pago/cancelación/corte; transiciones de cocina/entrega quedan para Sprint 4. Entrega validada en `America/Mexico_City` dentro del horario de servicio configurable (`cafeitsh.horario-apertura`, `cafeitsh.horario-cierre`, `cafeitsh.tiempo-preparacion-minutos`, `cafeitsh.margen-cierre-minutos`; iniciales `08:00`, `20:00`, `15`, `15`), sin exigir alineación a grilla.
+> Pedidos: sin endpoints de edición ni DELETE. Sprint 3 agrega pago/cancelación/corte; Sprint 4 agrega las transiciones `PAGADO -> EN_PREPARACION -> LISTO -> ENTREGADO` (sin saltos) y la vista `/api/cocina/pedidos`. Entrega validada en `America/Mexico_City` dentro del horario de servicio configurable (`cafeitsh.horario-apertura`, `cafeitsh.horario-cierre`, `cafeitsh.tiempo-preparacion-minutos`, `cafeitsh.margen-cierre-minutos`; iniciales `08:00`, `20:00`, `15`, `15`), sin exigir alineación a grilla.
 
 ### Pruebas
 
-- **83 pruebas** en verde (`mvnw.cmd test`) contra la BD real — no hay H2 ni Testcontainers.
+- **83 pruebas** confirmadas en verde en Sprint 3 (`mvnw.cmd test`) contra la BD real — no hay H2 ni Testcontainers.
+- **8 pruebas unitarias** de `ServicioCocinaTests` ejecutadas en verde en Sprint 4.
+- **5 pruebas de integración** de `ControladorCocinaTests` escritas, pendientes de ejecutar con MySQL real.
 - Archivos: `ControladorAutenticacionTests` (9), `ControladorMenuTests` (13),
   `ControladorPedidoTests` (9), `ControladorCajaTests` (5), `ServicioJwtTests` (6), `ServicioCategoriaTests` (8),
-  `ServicioProductoTests` (8), `ServicioPedidoTests` (17), `ServicioCajaTests` (7), `BackendApplicationTests` (1).
+  `ServicioProductoTests` (8), `ServicioPedidoTests` (17), `ServicioCajaTests` (7), `BackendApplicationTests` (1),
+  `ServicioCocinaTests` (8), `ControladorCocinaTests` (5).
 
 ## 3. Cómo se trabaja (ciclo por sprint)
 

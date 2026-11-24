@@ -23,9 +23,9 @@ Si un documento contradice al código, informar la diferencia y esperar decisió
 - `backend/`: Spring Boot **4.1.2** + Java 17. Estructura de paquetes implementada
   (`config/ controller/ service/ repository/ entity/ dto/ security/ exception/`).
   Módulos completos: autenticación/usuarios (Sprint 0), menú de
-  categorías/productos (Sprint 1), pedidos de creación/consulta (Sprint 2) y caja pago/cancelación/corte (Sprint 3); los demás módulos aún no existen.
+  categorías/productos (Sprint 1), pedidos de creación/consulta (Sprint 2) y caja pago/cancelación/corte (Sprint 3). Cocina (Sprint 4) está implementada en la rama `sprint-4-cocina`, pendiente de verificación completa; los demás módulos aún no existen.
 - `frontend/`: **vacío** — el proyecto Flutter todavía no se creó. Los comandos de Flutter más abajo aplican cuando exista.
-- `specs/`: `autenticacion-usuarios/` (Sprint 0), `menu/` (Sprint 1), `pedidos/` (Sprint 2), `caja/` (Sprint 3). `docs/`: `AGENTS.md`, `bitacora-desarrollo.md`, `sprints.md` (plan por sprints), `guia-colaborador.md` (estado del sistema y patrones del código), PDFs de pantallas.
+- `specs/`: `autenticacion-usuarios/` (Sprint 0), `menu/` (Sprint 1), `pedidos/` (Sprint 2), `caja/` (Sprint 3), `cocina/` (Sprint 4). `docs/`: `AGENTS.md`, `bitacora-desarrollo.md`, `sprints.md` (plan por sprints), `guia-colaborador.md` (estado del sistema y patrones del código), PDFs de pantallas.
 - Sin CI, sin linter, sin formatter, sin codegen. No inventar comandos de lint que no existen.
 - Avance y decisiones registrados en `docs/bitacora-desarrollo.md` (revisar antes de continuar).
 

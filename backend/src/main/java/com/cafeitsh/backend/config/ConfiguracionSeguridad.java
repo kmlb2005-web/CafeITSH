@@ -50,6 +50,11 @@ public class ConfiguracionSeguridad {
                 .requestMatchers(HttpMethod.POST, "/api/pedidos/*/pago").hasAnyRole("CAJA", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/pedidos/*/cancelar").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/caja/**").hasAnyRole("CAJA", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/cocina/**").hasAnyRole("COCINA", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/pedidos/*/en-preparacion",
+                        "/api/pedidos/*/listo").hasAnyRole("COCINA", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/pedidos/*/entregado")
+                        .hasAnyRole("COCINA", "CAJA", "ADMIN")
                 // Gestión de usuarios: solo ADMIN
                 .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
                 // Gestión de menú: solo ADMIN

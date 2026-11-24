@@ -1,7 +1,7 @@
 # Plan: Backend cafeITSH — por sprints
 
 > Plan original acordado con el equipo. Reproducido tal cual fue aprobado.
-> **Estado (20/11/2026):** Sprint 0 ✅, Sprint 1 ✅ y Sprint 2 ✅ completados — detalle en `docs/bitacora-desarrollo.md`.
+> **Estado (24/11/2026):** Sprints 0, 1, 2 y 3 completados; Sprint 4 implementado, pendiente de verificación completa — detalle en `docs/bitacora-desarrollo.md`.
 
 **Regla de ritmo:** cada módulo = un sprint. Al terminar un sprint entrego reporte + documentación, y **espero tu autorización explícita** antes de tocar el siguiente. Sin autorización, no avanzo.
 
@@ -37,7 +37,7 @@ Spec → aprobación → creación/consulta de pedidos con ventana de entrega de
 - **Decisiones registradas:** horario/lead/margen configurables (inicial 08:00–20:00, 15/15 min), inmutabilidad al crear, sin límites de ítems/monto, intención `EFECTIVO_EN_CAJA` opcional, cancelación solo en `PENDIENTE` diferida a Sprint 3 (detalle en spec/bitácora).
 - **Criterio de cierre:** `mvnw.cmd test` (71) + `mvnw.cmd package` en verde, bitácora actualizada.
 
-## Sprint 3 — Caja
+## Sprint 3 — Caja ✅ completado
 
 Spec → aprobación → pago, cancelación, corte básico → pruebas → reporte → **espero tu autorización**.
 
@@ -54,21 +54,28 @@ Spec → aprobación → pago, cancelación, corte básico → pruebas → repor
   - ¿Hay reembolsos o ajustes manuales?
 - **Criterio de cierre:** igual que Sprint 2.
 
-## Sprint 4 — Cocina
+## Sprint 4 — Cocina (implementado, pendiente de verificación)
 
-Spec → aprobación → transiciones En preparación → Listo → pruebas → reporte → **espero tu autorización**.
+Plan original: Spec → aprobación → transiciones En preparación → Listo → pruebas → reporte.
 
-- **Alcance mínimo:**
-  - Transiciones **En preparación** y **Listo** gestionadas por rol COCINA.
-  - Vista de pedidos pendientes de preparación.
-  - Definir quién marca **Entregado** (puede ser caja, cocina o el cliente al recoger) según la spec.
+**Avance (24/11/2026):** spec aprobada en `specs/cocina/spec.md`; implementados
+`GET /api/cocina/pedidos` y las transiciones a `EN_PREPARACION`, `LISTO` y
+`ENTREGADO`. Reglas aprobadas: solo desde `PAGADO`, sin saltos, COCINA/ADMIN en
+preparación y listo, y COCINA/CAJA/ADMIN en entrega. 8 pruebas unitarias en verde;
+suite completa y `mvnw.cmd package` con pruebas pendientes por falta de MySQL/Docker.
+
+- **Alcance implementado:**
+  - `GET /api/cocina/pedidos`: pedidos `PAGADO` ordenados por hora de entrega.
+  - `POST /api/pedidos/{id}/en-preparacion` y `/listo` (COCINA/ADMIN).
+  - `POST /api/pedidos/{id}/entregado` (COCINA/CAJA/ADMIN).
+  - Sin migración nueva, sin notificaciones y sin cambios en cancelación de caja.
 - **Depende de:** Sprint 2 (pedidos) y Sprint 3 (estado Pagado como puerta de entrada a cocina).
-- **Preguntas abiertas:**
-  - ¿Un pedido **no pagado** puede entrar a preparación? (respuesta esperada: no, pero confirmar)
-  - ¿Se puede saltar de un estado a otro distinto al siguiente?
-  - ¿Quién marca **Entregado** y en qué momento?
-  - ¿Hay notificaciones al cliente (pantalla de espera, etc.) o solo consulta?
-- **Criterio de cierre:** igual que Sprint 2.
+- **Decisiones cerradas:**
+  - No: un pedido no pagado no puede entrar a preparación; solo se acepta `PAGADO`.
+  - No: no se permiten saltos de estado.
+  - `ENTREGADO` lo registra COCINA, CAJA o ADMIN desde `LISTO`, al entregar el pedido.
+  - Solo consulta: sin notificaciones automáticas al cliente en este sprint.
+- **Criterio de cierre:** igual que Sprint 2; aún pendiente de verificación completa.
 
 ## Sprint 5 — Cierre
 

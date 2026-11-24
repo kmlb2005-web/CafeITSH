@@ -3,7 +3,7 @@
 Registro de los sprints terminados del backend. Cada sprint se cierra con
 sus pruebas ejecutadas y queda pendiente de autorización para el siguiente.
 
-Estado general: **Sprint 0, Sprint 1 y Sprint 2 completados** · Frontend pendiente (sin proyecto Flutter aún).
+Estado general: **Sprints 0, 1, 2 y 3 completados** · Sprint 4 implementado, pendiente de verificación completa · Frontend pendiente (sin proyecto Flutter aún).
 
 ---
 
@@ -387,3 +387,87 @@ mvnw.cmd package   → BUILD SUCCESS (jar backend-0.0.1-SNAPSHOT.jar)
 - Cancelación: CLIENTE solo PENDIENTE propio; CAJA/ADMIN PENDIENTE o PAGADO antes de EN_PREPARACION; no cancelable en estados posteriores. Motivo/actor/fecha obligatorios.
 - Sin reembolsos automáticos ni ajustes de monto; se registra constancia manual de reembolso cuando aplica.
 - Corte básico diario por fecha de pago en America/Mexico_City: solo pagados del día, desglose por método y contador informativo de cancelados sin sumar al ingreso neto; sin rangos.
+
+---
+
+## Sprint 4 — Cocina: vista de pendientes y transiciones (24/11/2026)
+
+### Estado
+
+**Implementado, no cerrado.** Falta ejecutar la suite completa y `mvnw.cmd package`
+con pruebas contra MySQL real; en este entorno no hay Docker, `database/.env` ni
+servicio MySQL en el puerto 3307.
+
+### Objetivo
+
+Exponer los pedidos pagados pendientes de preparación e implementar las
+transiciones `PAGADO -> EN_PREPARACION -> LISTO -> ENTREGADO`, sin saltos de
+estado, con autorización verificada en backend.
+
+### Spec asociada
+
+`specs/cocina/spec.md` (creada y aprobada en este sprint con las decisiones
+resueltas con la patrocinadora).
+
+### Archivos creados
+
+| Archivo | Contenido |
+|---|---|
+| `specs/cocina/spec.md` | Especificación del módulo de cocina |
+| `backend/.../service/ServicioCocina.java` | Vista de pendientes y reglas de transición por rol/estado |
+| `backend/.../controller/ControladorCocina.java` | Endpoints de vista y transiciones |
+| `backend/src/test/.../service/ServicioCocinaTests.java` | 8 pruebas unitarias |
+| `backend/src/test/.../controller/ControladorCocinaTests.java` | 5 pruebas de integración MockMvc (escritas, pendientes de ejecutar) |
+
+### Archivos modificados
+
+- `backend/.../repository/PedidoRepository.java`: consulta
+  `buscarPendientesPreparacion()` con estados `PAGADO` ordenados por
+  `fechaHoraEntrega` y `id`.
+- `backend/.../config/ConfiguracionSeguridad.java`: `GET /api/cocina/**` para
+  COCINA/ADMIN; `POST /api/pedidos/*/en-preparacion` y `/listo` para
+  COCINA/ADMIN; `POST /api/pedidos/*/entregado` para COCINA/CAJA/ADMIN.
+- `docs/sprints.md`, `AGENTS.md`, `docs/guia-colaborador.md`: estado y endpoints.
+
+### Endpoints agregados
+
+| Método | Ruta | Acceso |
+|---|---|---|
+| GET | `/api/cocina/pedidos` | COCINA/ADMIN (pedidos `PAGADO`) |
+| POST | `/api/pedidos/{id}/en-preparacion` | COCINA/ADMIN (`PAGADO -> EN_PREPARACION`) |
+| POST | `/api/pedidos/{id}/listo` | COCINA/ADMIN (`EN_PREPARACION -> LISTO`) |
+| POST | `/api/pedidos/{id}/entregado` | COCINA/CAJA/ADMIN (`LISTO -> ENTREGADO`) |
+
+### Pruebas ejecutadas
+
+```cmd
+cd backend
+mvnw.cmd -DskipTests compile          → COMPILACIÓN EXITOSA
+mvnw.cmd test -Dtest=ServicioCocinaTests → Tests run: 8, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS
+mvnw.cmd -DskipTests package          → BUILD SUCCESS (backend-0.0.1-SNAPSHOT.jar)
+```
+
+**No ejecutado:** `mvnw.cmd test` completo ni `mvnw.cmd package` con pruebas.
+Requiere MySQL en `3307`, `DB_PASSWORD` y `JWT_SECRET`; no estaban disponibles.
+Las 5 pruebas de integración de `ControladorCocinaTests` tampoco se ejecutaron.
+
+### Decisiones tomadas
+
+1. **Puerta de cocina:** solo pedidos `PAGADO` pueden pasar a `EN_PREPARACION`.
+2. **Sin saltos:** `PAGADO -> EN_PREPARACION -> LISTO -> ENTREGADO`; otro origen
+   o destino devuelve 409 y no modifica el pedido.
+3. **Roles:** COCINA y ADMIN gestionan preparación/listo; COCINA, CAJA y ADMIN
+   registran la entrega.
+4. **Vista:** `GET /api/cocina/pedidos` devuelve solo pedidos `PAGADO`, ordenados
+   por hora de entrega; sin notificaciones automáticas en este sprint.
+5. **Sin migración nueva:** se reutiliza `pedidos.actualizadoEn`; no se añadió
+   auditoría específica de cocina.
+6. **Cancelación sin cambios:** un pedido `PAGADO` que cocina no pueda preparar
+   se cancela desde caja antes de iniciar preparación, según `specs/caja/spec.md`.
+
+### Pendientes / notas
+
+- Ejecutar `mvnw.cmd test` y `mvnw.cmd package` completos con MySQL real.
+- Ratificar el cierre del Sprint 4 en la bitácora después de la verificación.
+- CORS sigue restringido a orígenes de desarrollo (Sprint 5).
+- Frontend y `docs/endpoints-api.md` quedan para Sprint 5.

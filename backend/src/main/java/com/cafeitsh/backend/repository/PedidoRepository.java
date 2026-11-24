@@ -41,6 +41,16 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     @Query("""
             SELECT DISTINCT p FROM Pedido p
             JOIN FETCH p.usuario
+            LEFT JOIN FETCH p.items i
+            LEFT JOIN FETCH i.producto
+            WHERE p.estado = com.cafeitsh.backend.entity.EstadoPedido.PAGADO
+            ORDER BY p.fechaHoraEntrega ASC, p.id ASC
+            """)
+    List<Pedido> buscarPendientesPreparacion();
+
+    @Query("""
+            SELECT DISTINCT p FROM Pedido p
+            JOIN FETCH p.usuario
             LEFT JOIN FETCH p.canceladoPor
             WHERE p.estado = com.cafeitsh.backend.entity.EstadoPedido.CANCELADO
               AND p.canceladoEn >= :inicio AND p.canceladoEn < :fin
