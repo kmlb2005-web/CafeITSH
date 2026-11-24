@@ -22,10 +22,10 @@ Si un documento contradice al código, informar la diferencia y esperar decisió
 
 - `backend/`: Spring Boot **4.1.2** + Java 17. Estructura de paquetes implementada
   (`config/ controller/ service/ repository/ entity/ dto/ security/ exception/`).
-  Módulos completos: autenticación/usuarios (Sprint 0) y menú de
-  categorías/productos (Sprint 1); los demás módulos aún no existen.
+  Módulos completos: autenticación/usuarios (Sprint 0), menú de
+  categorías/productos (Sprint 1), pedidos de creación/consulta (Sprint 2) y caja pago/cancelación/corte (Sprint 3); los demás módulos aún no existen.
 - `frontend/`: **vacío** — el proyecto Flutter todavía no se creó. Los comandos de Flutter más abajo aplican cuando exista.
-- `specs/`: `autenticacion-usuarios/` (Sprint 0), `menu/` (Sprint 1). `docs/`: `AGENTS.md`, `bitacora-desarrollo.md`, `sprints.md` (plan por sprints), `guia-colaborador.md` (estado del sistema y patrones del código), PDFs de pantallas.
+- `specs/`: `autenticacion-usuarios/` (Sprint 0), `menu/` (Sprint 1), `pedidos/` (Sprint 2), `caja/` (Sprint 3). `docs/`: `AGENTS.md`, `bitacora-desarrollo.md`, `sprints.md` (plan por sprints), `guia-colaborador.md` (estado del sistema y patrones del código), PDFs de pantallas.
 - Sin CI, sin linter, sin formatter, sin codegen. No inventar comandos de lint que no existen.
 - Avance y decisiones registrados en `docs/bitacora-desarrollo.md` (revisar antes de continuar).
 
@@ -73,4 +73,4 @@ URL del backend: `http://localhost:8081`; emulador Android: `http://10.0.2.2:808
 
 1. Leer spec y documentos relacionados → 2. revisar código existente → 3. proponer plan y archivos a modificar → 4. esperar aprobación → 5. implementar → 6. ejecutar pruebas → 7. informar archivos cambiados, pruebas ejecutadas con su resultado y pendientes.
 
-Reglas de negocio recordatorio (detalle en `docs/AGENTS.md`): pedidos con mínimo 10 minutos de anticipación; estados Pendiente → Pagado → En preparación → Listo → Entregado, más Cancelado. La autorización por roles se verifica en el backend, nunca solo ocultando pantallas en Flutter.
+Reglas de negocio recordatorio (detalle en `docs/AGENTS.md`): pedidos anticipados del mismo día (`America/Mexico_City`) dentro del horario de servicio configurable (apertura/cierre, tiempo de preparación y margen de cierre; la hora de entrega no exige alineación a grilla), inmutables al crearse en `PENDIENTE` (Sprint 2 sin transiciones de estado); estados Pendiente → Pagado → En preparación → Listo → Entregado, más Cancelado. La autorización por roles se verifica en el backend, nunca solo ocultando pantallas en Flutter.

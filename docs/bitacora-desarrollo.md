@@ -1,9 +1,9 @@
-# Bitácora de desarrollo
+﻿# Bitácora de desarrollo
 
 Registro de los sprints terminados del backend. Cada sprint se cierra con
 sus pruebas ejecutadas y queda pendiente de autorización para el siguiente.
 
-Estado general: **Sprint 0 y Sprint 1 completados** · Frontend pendiente (sin proyecto Flutter aún).
+Estado general: **Sprint 0, Sprint 1 y Sprint 2 completados** · Frontend pendiente (sin proyecto Flutter aún).
 
 ---
 
@@ -203,3 +203,187 @@ de menú. La migración `V2` quedó aplicada (Flyway reporta versión 2).
   producción.
 - El menú público consulta las tablas en cada petición (sin caché): si el
   rendimiento lo pide, evaluar caché en un sprint futuro.
+
+---
+
+## Sprint 2 — Pedidos: creación y consulta (20/11/2026)
+
+### Objetivo
+
+Implementar el registro de pedidos anticipados por el cliente (estado inicial
+`PENDIENTE`) con validación de la ventana de entrega dentro del horario de
+servicio y captura del precio vigente, y la consulta de pedidos por rol. Las
+transiciones de estado (pago, cancelación, preparación, listo, entregado) se
+difieren a los Sprints 3 y 4 según el plan.
+
+### Spec asociada
+
+`specs/pedidos/spec.md` (ajustada a la regla de ventana/horario aprobada con la patrocinadora).
+
+### Decisiones de negocio aplicadas (aprobadas/ajustadas)
+
+1. **Ventana de entrega y horario de servicio:** el cliente elige `fechaHoraEntrega`, **mismo día**,
+   zona `America/Mexico_City`. El pedido se realiza dentro del horario de servicio
+   (`horaApertura <= ahora < horaCierre`) y la entrega debe cumplir
+   `entrega >= ahora + tiempoPreparacionMinutos` (lead), `entrega <= horaCierre - margenCierreMinutos`
+   y estar dentro del horario de servicio. Si `ahora + tiempoPreparacionMinutos` es anterior a la
+   apertura del mismo día, el mínimo efectivo es `horaApertura`. La hora **no** exige alineación a
+   una grilla/franja exacta (p. ej. múltiplos de 10 minutos).
+2. **Configuración:** `cafeitsh.horario-apertura` (`08:00`), `cafeitsh.horario-cierre` (`20:00`),
+   `cafeitsh.tiempo-preparacion-minutos` (`15`), `cafeitsh.margen-cierre-minutos` (`15`) en
+   `application.yaml` (horario único diario).
+3. **Inmutabilidad:** pedido confirmado = creado en `PENDIENTE`; no se
+   editan ítems, cantidades, hora ni total tras la creación.
+4. **Sin límites de sistema:** no hay tope de ítems/monto en backend
+   (capacidad sujeta a operación/cocina).
+5. **Precio vigente:** `precioUnitario` y `subtotal` por ítem y `total`
+   del pedido se capturan al crear y no se recalculan.
+6. **Método de pago preferido:** intención opcional `EFECTIVO_EN_CAJA`
+   (sin datos de tarjeta). No equivale a pago confirmado; el cobro real
+   lo registra CAJA en Sprint 3 (`PENDIENTE -> PAGADO`).
+7. **Estados y flujo:** catálogo fijo sin cambios. Creación en
+   `PENDIENTE`; preparación solo con pedido `PAGADO` (COCINA pasa a
+   `EN_PREPARACION` cuando hay capacidad, Sprint 4). No se exponen
+   endpoints de transición en este sprint.
+8. **Cancelación (regla definida):** solo antes de pagar/preparar
+   (`PENDIENTE`), por CLIENTE dueño y/o CAJA/ADMIN; no cancelable en
+   `EN_PREPARACION`, `LISTO`, `ENTREGADO`. Endpoint/transición diferidos
+   a Sprint 3 (salvo autorización explícita posterior).
+9. **Visibilidad:** CLIENTE solo sus pedidos; CAJA, COCINA y ADMIN
+   consultan todos.
+
+### Archivos creados
+
+| Archivo | Contenido |
+|---|---|
+| `specs/pedidos/spec.md` | Especificación del módulo de pedidos |
+| `backend/.../resources/db/migraciones/V3__crear_tablas_pedidos.sql` | Tablas `pedidos` y `pedido_items` |
+| `backend/.../entity/EstadoPedido.java`, `MetodoPagoPreferido.java`, `Pedido.java`, `PedidoItem.java` | Entidades y catálogos |
+| `backend/.../repository/PedidoRepository.java`, `PedidoItemRepository.java` | Acceso a datos y consultas con detalle |
+| `backend/.../dto/SolicitudItemPedido.java`, `SolicitudCreacionPedido.java` | DTOs de entrada |
+| `backend/.../dto/RespuestaClientePedido.java`, `RespuestaItemPedido.java`, `RespuestaPedido.java` | DTOs de salida |
+| `backend/.../service/ServicioPedido.java` | Reglas de ventana/horario, disponibilidad, precio vigente, visibilidad |
+| `backend/.../controller/ControladorPedido.java` | Endpoints de creación y consulta |
+| `backend/src/test/.../service/ServicioPedidoTests.java` | 17 pruebas unitarias de reglas de ventana y servicio |
+| `backend/src/test/.../controller/ControladorPedidoTests.java` | 9 pruebas de integración MockMvc |
+
+### Archivos modificados
+
+- `backend/src/main/resources/application.yaml`: propiedades `cafeitsh.horario-apertura`,
+  `cafeitsh.horario-cierre`, `cafeitsh.tiempo-preparacion-minutos`, `cafeitsh.margen-cierre-minutos`.
+- `backend/.../config/ConfiguracionSeguridad.java`: `POST /api/pedidos`
+  solo CLIENTE; `GET /api/pedidos` y `GET /api/pedidos/**` autenticados
+  (la propiedad/rol se valida en servicio).
+- `backend/.../exception/ManejadorErrores.java`: manejo de
+  `HttpMessageNotReadableException` → 400 en español (cuerpos/tipos
+  inválidos).
+
+### Endpoints agregados
+
+| Método | Ruta | Acceso |
+|---|---|---|
+| POST | `/api/pedidos` | CLIENTE (crea en `PENDIENTE`, 201) |
+| GET | `/api/pedidos` | autenticado (CLIENTE: propios; CAJA/COCINA/ADMIN: todos) |
+| GET | `/api/pedidos/{id}` | autenticado (CLIENTE solo dueño; 403 si ajeno; 404 si no existe) |
+
+No se agregan endpoints DELETE ni de edición/transición de estado.
+
+### Pruebas ejecutadas
+
+**Implementación inicial (regla anterior 10–20 min, verificada):**
+`mvnw.cmd test` → Tests run: 70, Failures: 0, Errors: 0, Skipped: 0 (BUILD SUCCESS);
+`mvnw.cmd package` → BUILD SUCCESS, con `V3` aplicada en MySQL real (puerto 3307).
+
+**Ajuste de regla (apertura/cierre/lead/margen configurables, sin alineación a grilla):**
+spec, servicio, configuración, pruebas y documentación actualizados y re-verificados en esta sesión:
+```cmd
+cd backend
+set DB_PASSWORD=<valor de database/.env>
+set JWT_SECRET=<secreto >= 32 caracteres>
+mvnw.cmd test      → Tests run: 71, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS
+mvnw.cmd package   → BUILD SUCCESS (jar backend-0.0.1-SNAPSHOT.jar)
+```
+Pruebas contra MySQL real en Docker (puerto 3307) con `V3` aplicada. Se ajustó una aserción unitaria de texto (`"mismo"`) por codificación de salida en consola Windows; la regla validada se mantiene.
+
+### Decisiones técnicas tomadas
+
+1. **V3 nueva, sin tocar V1/V2:** `pedidos` y `pedido_items` con FKs a
+   `usuarios` y `productos`, checks de cantidades/precios e índices de
+   consulta; sin tabla `pagos` (Sprint 3).
+2. **Validación de ventana en servicio:** cálculo con
+   `America/Mexico_City` y parámetros configurables (apertura, cierre, lead, margen);
+   método de validación de paquete para pruebas unitarias deterministas.
+3. **Precio histórico:** se copia `precio` del producto a
+   `precio_unitario`/`subtotal` al crear (no se recalcula).
+4. **Consultas con fetch join + DISTINCT** para cargar usuario, ítems y
+   productos sin N+1 y sin duplicados por colección.
+5. **Integración de pedidos con horario de prueba amplio** (`00:00`–`23:59`, lead/margen 15)
+   para disponer de ventana válida al ejecutar en cualquier hora del día, manteniendo la regla
+   de negocio en el servicio.
+
+### Pendientes / notas para el siguiente sprint
+
+- Ejecutar `mvnw.cmd test` y `mvnw.cmd package` del ajuste de regla y registrar resultados.
+- Ratificar con la patrocinadora las decisiones vigentes (horario/lead/margen configurables,
+  sin exigir grilla exacta, cancelación solo en `PENDIENTE` diferida a Sprint 3, método
+  `EFECTIVO_EN_CAJA` como intención).
+- Sprint 3 (Caja): transición `PENDIENTE -> PAGADO`, cancelación según
+  reglas aprobadas, corte básico y tabla `pagos` si aplica; definir
+  manejo de pedidos `PAGADO` que cocina no pueda preparar.
+- Sprint 4 (Cocina): transiciones `PAGADO -> EN_PREPARACION -> LISTO`
+  y definición de quién marca `ENTREGADO`.
+- CORS sigue restringido a orígenes de desarrollo.
+
+---
+
+## Sprint 3 — Caja: pago, cancelación y corte básico (23/11/2026)
+
+### Objetivo
+
+Implementar el flujo de caja: registro de pago PENDIENTE -> PAGADO por CAJA/ADMIN, cancelación controlada por rol/estado con auditoría, y corte básico diario en zona America/Mexico_City.
+
+### Spec asociada
+
+specs/caja/spec.md (aprobada).
+
+### Archivos creados
+
+| Archivo | Contenido |
+|---|---|
+| specs/caja/spec.md | Especificación del módulo de caja |
+| ackend/.../db/migraciones/V4__crear_tabla_pagos_y_auditoria_cancelacion.sql | Tabla pagos y campos de auditoría de cancelación/reembolso en pedidos |
+| ackend/.../entity/MetodoPago.java, Pago.java | Catálogo de pago real y entidad de pago |
+| ackend/.../repository/PagoRepository.java | Consultas de pagos y rango por fecha |
+| ackend/.../dto/SolicitudRegistroPago.java, SolicitudCancelacionPedido.java | DTOs de entrada |
+| ackend/.../dto/RespuestaPago.java, RespuestaCancelacionPedido.java, RespuestaDesglosePago.java, RespuestaCanceladosCorte.java, RespuestaCorteCaja.java | DTOs de salida |
+| ackend/.../service/ServicioCaja.java | Reglas de pago, cancelación, reembolso manual y corte |
+| ackend/.../controller/ControladorCaja.java | Endpoints de pago, cancelación y corte |
+| ackend/src/test/.../service/ServicioCajaTests.java | Pruebas unitarias |
+| ackend/src/test/.../controller/ControladorCajaTests.java | Pruebas de integración MockMvc |
+
+### Archivos modificados
+
+- ackend/.../entity/MetodoPagoPreferido.java: agrega TRANSFERENCIA.
+- ackend/.../entity/Pedido.java: campos de cancelación/reembolso manual y relación con pagos.
+- ackend/.../dto/RespuestaPedido.java, service/ServicioPedido.java: incluyen pago y cancelacion cuando aplica.
+- ackend/.../repository/PedidoRepository.java: consulta de cancelados por rango.
+- ackend/.../config/ConfiguracionSeguridad.java: reglas para /api/pedidos/*/pago, /api/pedidos/*/cancelar, /api/caja/**.
+- ackend/src/test/.../service/ServicioPedidoTests.java: constructor actualizado con PagoRepository.
+
+### Pruebas ejecutadas
+
+`cmd
+cd backend
+set DB_PASSWORD=<valor de database/.env>
+set JWT_SECRET=<secreto >= 32 caracteres>
+mvnw.cmd test      → Tests run: 83, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS
+mvnw.cmd package   → BUILD SUCCESS (jar backend-0.0.1-SNAPSHOT.jar)
+`
+
+### Decisiones tomadas
+
+- Métodos aceptados: EFECTIVO y TRANSFERENCIA; sin datos de tarjeta ni integración bancaria.
+- Intención metodoPagoPreferido ampliada a EFECTIVO_EN_CAJA y TRANSFERENCIA; pago real en tabla pagos.
+- Cancelación: CLIENTE solo PENDIENTE propio; CAJA/ADMIN PENDIENTE o PAGADO antes de EN_PREPARACION; no cancelable en estados posteriores. Motivo/actor/fecha obligatorios.
+- Sin reembolsos automáticos ni ajustes de monto; se registra constancia manual de reembolso cuando aplica.
+- Corte básico diario por fecha de pago en America/Mexico_City: solo pagados del día, desglose por método y contador informativo de cancelados sin sumar al ingreso neto; sin rangos.

@@ -1,4 +1,3 @@
-
 spring:
   application:
     name: cafeITSH
@@ -23,7 +22,14 @@ spring:
 server:
   port: 8081
 
-# Seguridad — ver specs/autenticacion-usuarios/spec.md §10
+# Seguridad ? ver specs/autenticacion-usuarios/spec.md ?10
 jwt:
   secreto: ${JWT_SECRET}
   expiracion-minutos: 480
+
+# Pedidos ? ver specs/pedidos/spec.md ?10
+cafeitsh:
+  horario-apertura: "08:00"
+  horario-cierre: "20:00"
+  tiempo-preparacion-minutos: 15
+  margen-cierre-minutos: 15

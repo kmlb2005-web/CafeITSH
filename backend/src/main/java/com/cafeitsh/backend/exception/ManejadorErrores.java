@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -42,6 +43,12 @@ public class ManejadorErrores {
     public ResponseEntity<RespuestaError> parametroInvalido(MethodArgumentTypeMismatchException ex) {
         return responder(HttpStatus.BAD_REQUEST, "Los datos enviados no son válidos",
                 Map.of(ex.getName(), "Valor inválido"));
+    }
+
+    /** Cuerpo de petición mal formado o con tipos/formatos inválidos. */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<RespuestaError> mensajeNoLegible(HttpMessageNotReadableException ex) {
+        return responder(HttpStatus.BAD_REQUEST, "Los datos enviados no son válidos", null);
     }
 
     /** Reglas de negocio definidas en las especificaciones. */

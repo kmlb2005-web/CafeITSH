@@ -1,7 +1,7 @@
 # Plan: Backend cafeITSH — por sprints
 
 > Plan original acordado con el equipo. Reproducido tal cual fue aprobado.
-> **Estado (19/11/2026):** Sprint 0 ✅ y Sprint 1 ✅ completados — detalle en `docs/bitacora-desarrollo.md`.
+> **Estado (20/11/2026):** Sprint 0 ✅, Sprint 1 ✅ y Sprint 2 ✅ completados — detalle en `docs/bitacora-desarrollo.md`.
 
 **Regla de ritmo:** cada módulo = un sprint. Al terminar un sprint entrego reporte + documentación, y **espero tu autorización explícita** antes de tocar el siguiente. Sin autorización, no avanzo.
 
@@ -24,23 +24,18 @@ Spec → aprobación → CRUD categorías/productos + consulta pública → prue
 
 ---
 
-## Sprint 2 — Pedidos
+## Sprint 2 — Pedidos ✅ completado
 
-Spec → aprobación → creación con regla ≥10 min, máquina de estados (Pendiente → Pagado → En preparación → Listo → Entregado / Cancelado), consulta por rol → pruebas → reporte → **espero tu autorización**.
+Spec → aprobación → creación/consulta de pedidos con ventana de entrega dentro del horario de servicio (misma zona `America/Mexico_City`, mismo día, parámetros configurables de apertura/cierre, lead y margen; sin exigir alineación a grilla) → pruebas → reporte.
 
-- **Alcance mínimo:**
-  - Migración `V3` con las tablas `pedidos` y `pedido_items` (el diseño tentativo ya está en la bitácora del Sprint 0; `pagos` puede quedar para el Sprint 3).
-  - `POST /api/pedidos` (rol CLIENTE): valida la regla de **≥10 minutos de anticipación** y captura los ítems con el precio vigente al momento de pedir.
-  - Consulta de pedidos por rol (cliente ve los suyos; caja/cocina ven los que les corresponda).
-  - Transición inicial **Pendiente** al crear el pedido; el resto de transiciones se reparten en Sprints 3 y 4.
-- **Depende de:** Sprint 0 (usuarios y roles), Sprint 1 (productos disponibles y categorías).
-- **Preguntas abiertas (resolver con el patrocinador antes de la spec):**
-  - ¿Se puede cancelar un pedido antes de pagarlo? ¿Quién y hasta qué estado?
-  - ¿Hay anticipación **máxima** (hasta cuánto tiempo antes se puede pedir)?
-  - ¿El cliente elige fecha/hora de entrega o se calcula automáticamente?
-  - ¿Se puede modificar un pedido ya confirmado (agregar/quitar ítems)?
-  - ¿Hay límite de ítems o de monto por pedido?
-- **Criterio de cierre:** `mvnw.cmd test` + `mvnw.cmd package` en verde, bitácora actualizada.
+- **Alcance implementado (ver `specs/pedidos/spec.md` y bitácora):**
+  - Migración `V3` con `pedidos` y `pedido_items` (sin `pagos`, diferido a Sprint 3).
+  - `POST /api/pedidos` (CLIENTE): crea en `PENDIENTE`, valida horario/ventana, captura precio vigente y total.
+  - `GET /api/pedidos` y `GET /api/pedidos/{id}`: visibilidad por rol (CLIENTE propios; CAJA/COCINA/ADMIN todos).
+  - Sin endpoints de edición, DELETE ni transiciones de estado (Sprints 3-4).
+- **Depende de:** Sprint 0 (usuarios y roles), Sprint 1 (productos/categorías).
+- **Decisiones registradas:** horario/lead/margen configurables (inicial 08:00–20:00, 15/15 min), inmutabilidad al crear, sin límites de ítems/monto, intención `EFECTIVO_EN_CAJA` opcional, cancelación solo en `PENDIENTE` diferida a Sprint 3 (detalle en spec/bitácora).
+- **Criterio de cierre:** `mvnw.cmd test` (71) + `mvnw.cmd package` en verde, bitácora actualizada.
 
 ## Sprint 3 — Caja
 
