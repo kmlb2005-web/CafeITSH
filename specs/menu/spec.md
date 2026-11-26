@@ -32,13 +32,13 @@ administrar categorías y productos desde el rol ADMIN.
 - Categorías: nombre único (case-insensitive), se desactivan con `activa = false`.
 - Un producto pertenece exactamente a una categoría existente y activa.
 - Un producto tiene `precio >= 0` y `disponible` (booleano).
-- **Desactivar una categoría oculta sus productos en la consulta pública**
-  (no es necesario desactivarlos uno por uno).
 - Un producto desactivado no aparece en el menú público, pero **sigue
   referenciable por los pedidos existentes** (no se borra la fila).
 - Un ADMIN no puede desactivar una categoría que tenga productos activos:
   primero se desactivan o migran sus productos (evita productos huérfanos
   visibles).
+- Una vez desactivados o migrados esos productos, la categoría puede
+  desactivarse y deja de mostrarse en la consulta pública junto con ellos.
 - Los nombres se guardan tal cual se escriben (respetando mayúsculas), la
   comparación de unicidad normaliza a minúsculas.
 

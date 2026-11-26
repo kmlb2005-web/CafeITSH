@@ -190,7 +190,7 @@ Formato uniforme `RespuestaError` en español: `{"mensaje", "timestamp", "campos
 ## 8. Consideraciones de seguridad
 
 - Autorización por rol y propiedad en backend (`ConfiguracionSeguridad` + servicio).
-- `@PreAuthorize`/reglas de servicio según patrón del proyecto para operaciones sensibles.
+- Reglas en `requestMatchers` de `ConfiguracionSeguridad` más validaciones de rol y propiedad en el servicio para operaciones sensibles.
 - No exponer contraseñas, tokens, SQL ni stack traces.
 - No registrar datos sensibles en logs/mensajes.
 - Operaciones de transición en transacción para reducir condiciones de carrera.

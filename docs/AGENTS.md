@@ -116,6 +116,7 @@ backend/src/main/java/com/cafeitsh/backend/
 ├── entity/
 ├── dto/
 ├── security/
+├── exception/
 └── BackendApplication.java
 ```
 

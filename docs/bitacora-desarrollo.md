@@ -372,13 +372,13 @@ specs/caja/spec.md (aprobada).
 
 ### Pruebas ejecutadas
 
-`cmd
+```cmd
 cd backend
 set DB_PASSWORD=<valor de database/.env>
 set JWT_SECRET=<secreto >= 32 caracteres>
 mvnw.cmd test      → Tests run: 83, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS
 mvnw.cmd package   → BUILD SUCCESS (jar backend-0.0.1-SNAPSHOT.jar)
-`
+```
 
 ### Decisiones tomadas
 
@@ -416,7 +416,7 @@ resueltas con la patrocinadora).
 | `specs/cocina/spec.md` | Especificación del módulo de cocina |
 | `backend/.../service/ServicioCocina.java` | Vista de pendientes y reglas de transición por rol/estado |
 | `backend/.../controller/ControladorCocina.java` | Endpoints de vista y transiciones |
-| `backend/src/test/.../service/ServicioCocinaTests.java` | 8 pruebas unitarias |
+| `backend/src/test/.../service/ServicioCocinaTests.java` | 9 pruebas unitarias |
 | `backend/src/test/.../controller/ControladorCocinaTests.java` | 5 pruebas de integración MockMvc |
 
 ### Archivos modificados
@@ -497,3 +497,24 @@ principal conserva los datos generados por las suites y no se borraron filas.
 - El frontend sigue sin proyecto Flutter.
 - Los datos generados por las suites permanecen en `cafeitsh_db`; no se borraron.
 - `database/.env.example` conserva valores de ejemplo, nunca credenciales reales.
+
+---
+
+## Auditoría documental (25/11/2026)
+
+Se revisó el repositorio completo contra la documentación y las especificaciones. El backend queda verificado hasta el Sprint 4 inclusive: 27 endpoints, 4 migraciones Flyway (`V1`–`V4`) y 99 pruebas en verde con `mvnw.cmd test` y `mvnw.cmd package`. El backend arrancó correctamente y respondieron `GET /api/prueba` y `GET /api/menu/categorias`.
+
+Correcciones aplicadas (solo documentación, sin cambios de código, migraciones, CORS, base de datos ni secretos):
+
+- `docs/sprints.md`: nombre real de `V1`, catálogo de intención de pago ampliado, decisiones del Sprint 3 registradas y regla de arranque del Sprint 5.
+- `README.md`: aclaración de alcance del Sprint 2 y del plan de frontend.
+- `docs/bitacora-desarrollo.md`: bloque de comandos corregido y conteo de `ServicioCocinaTests` ajustado a 9.
+- `specs/pedidos/spec.md`: `TRANSFERENCIA` añadida al catálogo de intención de pago.
+- `specs/autenticacion-usuarios/spec.md`: campo `activo` documentado en las respuestas de usuario.
+- `specs/caja/spec.md`: autorización descrita como `requestMatchers` + reglas de servicio.
+- `specs/menu/spec.md`: regla de desactivación de categorías unificada.
+- `docs/AGENTS.md`: paquete `exception/` añadido al árbol de la arquitectura.
+
+Pendiente fuera del Sprint 4: Sprint 5 (sin spec aprobada), `docs/endpoints-api.md`, CORS de producción y proyecto Flutter. `.specify/memory/contitution.md` se conserva sin cambios.
+
+Estado Git antes de esta corrección: `main` = `origin/main` @ `77ec8ae23bd0699606818d3fc6ee6aa62dd55883`, árbol limpio; `database/.env` ignorado y `backend/target/` ignorado.

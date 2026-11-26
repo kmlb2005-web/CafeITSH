@@ -60,7 +60,7 @@ Permitir que un cliente autenticado realice un pedido anticipado del menú, con 
 
 ### 4.3 Método de pago preferido (intención)
 
-- El pedido puede registrar `metodoPagoPreferido` como intención operativa (catálogo inicial: `EFECTIVO_EN_CAJA`). Campo opcional.
+- El pedido puede registrar `metodoPagoPreferido` como intención operativa (catálogo: `EFECTIVO_EN_CAJA` y `TRANSFERENCIA`; ampliación aprobada en `specs/caja/spec.md`). Campo opcional.
 - **No se capturan ni almacenan datos de tarjetas bancarias.**
 - La intención no equivale a pago confirmado: el cobro real lo registra CAJA como transición `PENDIENTE → PAGADO` (Sprint 3).
 
@@ -92,7 +92,7 @@ Entrada:
 ```
 
 - `fechaHoraEntrega`: obligatoria, fecha/hora local (`yyyy-MM-dd'T'HH:mm:ss`) interpretada en `America/Mexico_City`.
-- `metodoPagoPreferido`: opcional; valores permitidos: `EFECTIVO_EN_CAJA`.
+- `metodoPagoPreferido`: opcional; valores permitidos: `EFECTIVO_EN_CAJA` y `TRANSFERENCIA`.
 - `items`: obligatorio, mínimo 1 elemento. Cada elemento: `productoId` (obligatorio), `cantidad` (obligatoria, entero >= 1).
 
 Salida 201 (ejemplo):

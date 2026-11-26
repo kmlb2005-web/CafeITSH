@@ -47,11 +47,11 @@ Salida 201: `{"id", "nombre", "correo", "rol"}` · Conflictos 409 (correo ya reg
 ### POST /api/auth/login (público)
 
 Entrada: `{"correo": "...", "contrasena": "..."}`
-Salida 200: `{"token", "tipo": "Bearer", "usuario": {"id", "nombre", "correo", "rol"}}` · 401 (credenciales inválidas o cuenta desactivada).
+Salida 200: `{"token", "tipo": "Bearer", "usuario": {"id", "nombre", "correo", "rol", "activo"}}` · 401 (credenciales inválidas o cuenta desactivada).
 
 ### GET /api/auth/me (autenticado)
 
-Salida 200: `{"id", "nombre", "correo", "rol"}` · 401 sin token o inválido.
+Salida 200: `{"id", "nombre", "correo", "rol", "activo"}` · 401 sin token o inválido.
 
 ### Gestión de usuarios (rol ADMIN)
 

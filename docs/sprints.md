@@ -11,7 +11,7 @@
 
 ## Sprint 0 — Base transversal (previo a los módulos) ✅ completado
 
-- Integrar **Flyway** (dependencias + `application.yaml` + `V1__crear_esquema_inicial.sql`).
+- Integrar **Flyway** (dependencias + `application.yaml` + `V1__crear_tabla_usuarios.sql`).
 - Estructura de paquetes (`config/ controller/ service/ repository/ entity/ dto/ security/ exception/`).
 - Manejo centralizado de errores en español.
 - Seguridad base: BCrypt + **JWT** (login `POST /api/auth/login`, filtro, autorización por rol).
@@ -34,7 +34,7 @@ Spec → aprobación → creación/consulta de pedidos con ventana de entrega de
   - `GET /api/pedidos` y `GET /api/pedidos/{id}`: visibilidad por rol (CLIENTE propios; CAJA/COCINA/ADMIN todos).
   - Sin endpoints de edición, DELETE ni transiciones de estado (Sprints 3-4).
 - **Depende de:** Sprint 0 (usuarios y roles), Sprint 1 (productos/categorías).
-- **Decisiones registradas:** horario/lead/margen configurables (inicial 08:00–20:00, 15/15 min), inmutabilidad al crear, sin límites de ítems/monto, intención `EFECTIVO_EN_CAJA` opcional, cancelación solo en `PENDIENTE` diferida a Sprint 3 (detalle en spec/bitácora).
+- **Decisiones registradas:** horario/lead/margen configurables (inicial 08:00–20:00, 15/15 min), inmutabilidad al crear, sin límites de ítems/monto, intención `EFECTIVO_EN_CAJA`/`TRANSFERENCIA` opcional (catálogo ampliado en Sprint 3, detalle en `specs/caja/spec.md`), cancelación solo en `PENDIENTE` diferida a Sprint 3 (detalle en spec/bitácora).
 - **Criterio de cierre:** `mvnw.cmd test` (71) + `mvnw.cmd package` en verde, bitácora actualizada.
 
 ## Sprint 3 — Caja ✅ completado
@@ -47,11 +47,11 @@ Spec → aprobación → pago, cancelación, corte básico → pruebas → repor
   - Corte de caja básico (reporte del día).
   - Migración para la tabla `pagos` si la spec la requiere.
 - **Depende de:** Sprint 2 (tabla `pedidos` y estados).
-- **Preguntas abiertas:**
-  - ¿Qué métodos de pago se aceptan (efectivo, transferencia, otro)? **Nunca datos de tarjeta.**
-  - ¿El corte incluye solo pedidos pagados del día, o también cancelados? ¿Se puede cortar por rango de fechas?
-  - ¿Quién puede cancelar un pedido ya pagado y cómo queda registrada la cancelación?
-  - ¿Hay reembolsos o ajustes manuales?
+- **Decisiones registradas (ver `specs/caja/spec.md` y bitácora):**
+  - Métodos de pago: intención `EFECTIVO_EN_CAJA` o `TRANSFERENCIA`; nunca datos de tarjeta. El cobro real se registra en la tabla `pagos`.
+  - Corte: diario por fecha de pago en `America/Mexico_City`; solo pedidos pagados del día, desglose por método y contador informativo de cancelados que no suma al ingreso neto; sin rangos.
+  - Cancelación: CLIENTE dueño solo en `PENDIENTE`; CAJA/ADMIN en `PENDIENTE` o `PAGADO`, con auditoría.
+  - Reembolso manual: se registra como ajuste en la auditoría de cancelación, sin datos de tarjeta.
 - **Criterio de cierre:** igual que Sprint 2.
 
 ## Sprint 4 — Cocina ✅ completado
@@ -87,6 +87,7 @@ Suite verde completa + `docs/endpoints-api.md` (documentación de endpoints para
 - **Alcance mínimo:** suite completa en verde, `docs/endpoints-api.md` con todos los endpoints y sus contratos, revisión de seguridad (CORS restringido para producción), documentación sincronizada.
 - **Depende de:** Sprints 2, 3 y 4.
 - **Preguntas abiertas:** si se añaden funcionalidades transversales (estadísticas, reportes) decidir si entran aquí o en un sprint extra.
+- **Regla de arranque:** no se implementa sin spec aprobada y autorización explícita; el frontend se abordará después con su propia spec.
 
 ---
 
