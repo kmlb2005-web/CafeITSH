@@ -1,6 +1,8 @@
 package com.cafeitsh.backend.config;
 
+import com.cafeitsh.backend.dto.RespuestaError;
 import com.cafeitsh.backend.security.FiltroJwt;
+import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,9 +28,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class ConfiguracionSeguridad {
 
     private final FiltroJwt filtroJwt;
+    private final ObjectMapper objectMapper;
 
-    public ConfiguracionSeguridad(FiltroJwt filtroJwt) {
+    public ConfiguracionSeguridad(FiltroJwt filtroJwt, ObjectMapper objectMapper) {
         this.filtroJwt = filtroJwt;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -66,12 +70,14 @@ public class ConfiguracionSeguridad {
                 .authenticationEntryPoint((req, res, ex) -> {
                     res.setStatus(401);
                     res.setContentType("application/json;charset=UTF-8");
-                    res.getWriter().write("{\"mensaje\":\"Se requiere autenticación válida\"}");
+                    res.getWriter().write(objectMapper.writeValueAsString(
+                            RespuestaError.simple("Se requiere autenticación válida")));
                 })
                 .accessDeniedHandler((req, res, ex) -> {
                     res.setStatus(403);
                     res.setContentType("application/json;charset=UTF-8");
-                    res.getWriter().write("{\"mensaje\":\"No tienes permiso para realizar esta operación\"}");
+                    res.getWriter().write(objectMapper.writeValueAsString(
+                            RespuestaError.simple("No tienes permiso para realizar esta operación")));
                 }))
             .addFilterBefore(filtroJwt, UsernamePasswordAuthenticationFilter.class);
 

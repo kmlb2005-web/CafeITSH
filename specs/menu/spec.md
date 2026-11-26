@@ -2,7 +2,7 @@
 
 **Módulo:** menu
 **Sprint:** 1
-**Estado:** pendiente de aprobación
+**Estado:** aprobada e implementada
 
 ## 1. Objetivo
 

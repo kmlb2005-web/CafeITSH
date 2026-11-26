@@ -1,6 +1,7 @@
 package com.cafeitsh.backend.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -98,14 +99,20 @@ class ControladorCocinaTests {
 
         mockMvc.perform(get("/api/cocina/pedidos")
                         .header("Authorization", "Bearer " + tokenCliente))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.campos").doesNotExist());
 
         mockMvc.perform(post("/api/pedidos/" + pedidoId + "/en-preparacion")
                         .header("Authorization", "Bearer " + tokenCliente))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.campos").doesNotExist());
 
         mockMvc.perform(get("/api/cocina/pedidos"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.campos").doesNotExist());
     }
 
     @Test
@@ -191,6 +198,8 @@ class ControladorCocinaTests {
 
     private long crearPedido(String tokenCliente, Long productoId) throws Exception {
         LocalDateTime ahora = LocalDateTime.now(ZONA).withNano(0);
+        assumeTrue(ahora.toLocalTime().isBefore(LocalTime.parse("23:44")),
+                "Fuera del horario en que se pueden crear pedidos de prueba");
         LocalDateTime entrega = ahora.plusMinutes(30).withSecond(0).withNano(0);
         LocalTime max = LocalTime.parse("23:44");
         if (entrega.toLocalTime().isAfter(max)) {

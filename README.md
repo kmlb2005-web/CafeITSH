@@ -12,10 +12,10 @@ Proyecto académico desarrollado en equipo, guiado por especificaciones
 |---|---|---|
 | 0 | Flyway, seguridad JWT y autenticación/usuarios | ✅ Completado |
 | 1 | Menú: categorías y productos | ✅ Completado |
-| 2 | Pedidos (regla ≥10 min, máquina de estados) | ⏳ Pendiente |
-| 3 | Caja (pago, cancelación, corte) | ⏳ Pendiente |
-| 4 | Cocina (En preparación → Listo) | ⏳ Pendiente |
-| 5 | Cierre (suite verde + documentación de endpoints) | ⏳ Pendiente |
+| 2 | Pedidos (horario/ventana configurable y máquina de estados) | ✅ Completado |
+| 3 | Caja (pago, cancelación, corte) | ✅ Completado |
+| 4 | Cocina (En preparación → Listo → Entregado) | ✅ Completado |
+| 5 | Cierre (documentación de endpoints y revisión de CORS) | ⏳ Pendiente |
 
 El plan completo (incluido el frontend, después del Sprint 5) está en
 [docs/sprints.md](docs/sprints.md).

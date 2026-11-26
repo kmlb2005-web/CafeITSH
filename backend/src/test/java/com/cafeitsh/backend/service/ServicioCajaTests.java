@@ -65,7 +65,7 @@ class ServicioCajaTests {
         Usuario caja = usuario(2L, "caja@cafeitsh.mx", Rol.CAJA);
         Pedido pedido = pedido(10L, EstadoPedido.PENDIENTE, usuario(5L, "c@c.mx", Rol.CLIENTE));
         when(repositorioUsuarios.findByCorreo("caja@cafeitsh.mx")).thenReturn(Optional.of(caja));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
         when(repositorioPagos.save(any(Pago.class))).thenAnswer(i -> i.getArgument(0));
         when(repositorioPedidos.save(any(Pedido.class))).thenAnswer(i -> i.getArgument(0));
         when(servicioPedido.aRespuesta(any(Pedido.class))).thenReturn(null);
@@ -73,6 +73,7 @@ class ServicioCajaTests {
         servicio.registrarPago(10L, new SolicitudRegistroPago(MetodoPago.EFECTIVO, null), "caja@cafeitsh.mx");
 
         assertThat(pedido.getEstado()).isEqualTo(EstadoPedido.PAGADO);
+        verify(repositorioPedidos).findByIdParaActualizar(10L);
         verify(repositorioPagos).save(any(Pago.class));
     }
 
@@ -81,7 +82,7 @@ class ServicioCajaTests {
         Usuario caja = usuario(2L, "caja@cafeitsh.mx", Rol.CAJA);
         Pedido pedido = pedido(10L, EstadoPedido.PAGADO, usuario(5L, "c@c.mx", Rol.CLIENTE));
         when(repositorioUsuarios.findByCorreo("caja@cafeitsh.mx")).thenReturn(Optional.of(caja));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
 
         assertThatThrownBy(() -> servicio.registrarPago(10L, new SolicitudRegistroPago(MetodoPago.EFECTIVO, null), "caja@cafeitsh.mx"))
                 .isInstanceOf(ExcepcionNegocio.class)
@@ -93,7 +94,7 @@ class ServicioCajaTests {
         Usuario cliente = usuario(5L, "c@c.mx", Rol.CLIENTE);
         Pedido pedido = pedido(10L, EstadoPedido.PENDIENTE, cliente);
         when(repositorioUsuarios.findByCorreo("c@c.mx")).thenReturn(Optional.of(cliente));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
         when(repositorioPedidos.save(any(Pedido.class))).thenAnswer(i -> i.getArgument(0));
         when(servicioPedido.aRespuesta(any(Pedido.class))).thenReturn(null);
 
@@ -106,7 +107,7 @@ class ServicioCajaTests {
         Usuario cliente = usuario(5L, "c@c.mx", Rol.CLIENTE);
         Pedido pedido = pedido(10L, EstadoPedido.PAGADO, cliente);
         when(repositorioUsuarios.findByCorreo("c@c.mx")).thenReturn(Optional.of(cliente));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
 
         assertThatThrownBy(() -> servicio.cancelar(10L, new SolicitudCancelacionPedido("Motivo", true, false, null), "c@c.mx"))
                 .isInstanceOf(ExcepcionNegocio.class)
@@ -118,7 +119,7 @@ class ServicioCajaTests {
         Usuario caja = usuario(2L, "caja@cafeitsh.mx", Rol.CAJA);
         Pedido pedido = pedido(10L, EstadoPedido.PAGADO, usuario(5L, "c@c.mx", Rol.CLIENTE));
         when(repositorioUsuarios.findByCorreo("caja@cafeitsh.mx")).thenReturn(Optional.of(caja));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
         when(repositorioPedidos.save(any(Pedido.class))).thenAnswer(i -> i.getArgument(0));
         when(servicioPedido.aRespuesta(any(Pedido.class))).thenReturn(null);
 
@@ -133,7 +134,7 @@ class ServicioCajaTests {
         Usuario caja = usuario(2L, "caja@cafeitsh.mx", Rol.CAJA);
         Pedido pedido = pedido(10L, EstadoPedido.EN_PREPARACION, usuario(5L, "c@c.mx", Rol.CLIENTE));
         when(repositorioUsuarios.findByCorreo("caja@cafeitsh.mx")).thenReturn(Optional.of(caja));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
 
         assertThatThrownBy(() -> servicio.cancelar(10L, new SolicitudCancelacionPedido("Motivo", false, false, null), "caja@cafeitsh.mx"))
                 .isInstanceOf(ExcepcionNegocio.class)
@@ -158,6 +159,28 @@ class ServicioCajaTests {
         assertThat(corte.totalCobrado()).isEqualByComparingTo("50.00");
         assertThat(corte.cantidadPagos()).isEqualTo(1);
         assertThat(corte.desglosePorMetodo()).hasSize(2);
+    }
+
+    @Test
+    void corteNoSumaPagoDePedidoCancelado() {
+        LocalDate fecha = LocalDate.of(2026, 11, 20);
+        Pedido cancelado = pedido(11L, EstadoPedido.CANCELADO, usuario(5L, "c@c.mx", Rol.CLIENTE));
+        Pago pago = new Pago();
+        pago.setPedido(cancelado);
+        pago.setMetodoPago(MetodoPago.TRANSFERENCIA);
+        pago.setMonto(new BigDecimal("50.00"));
+        pago.setFechaPago(LocalDateTime.of(2026, 11, 20, 10, 0));
+        pago.setRegistradoPor(usuario(2L, "caja@cafeitsh.mx", Rol.CAJA));
+
+        when(repositorioPagos.buscarPorRangoFecha(any(), any())).thenReturn(List.of(pago));
+        when(repositorioPedidos.buscarCanceladosPorRango(any(), any())).thenReturn(List.of(cancelado));
+        when(repositorioPagos.findFirstByPedidoIdOrderByFechaPagoDesc(11L)).thenReturn(Optional.of(pago));
+
+        RespuestaCorteCaja corte = servicio.obtenerCorte(fecha);
+        assertThat(corte.totalCobrado()).isEqualByComparingTo("0.00");
+        assertThat(corte.cantidadPagos()).isZero();
+        assertThat(corte.cancelados().cantidad()).isEqualTo(1);
+        assertThat(corte.cancelados().montoPagadoCancelado()).isEqualByComparingTo("50.00");
     }
 
     private Usuario usuario(Long id, String correo, Rol rol) {

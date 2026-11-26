@@ -1,6 +1,7 @@
 package com.cafeitsh.backend.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -135,6 +136,50 @@ class ControladorCajaTests {
     }
 
     @Test
+    void corteNoSumaPedidoPagadoYLuegoCancelado() throws Exception {
+        String tokenCliente = crearUsuarioYToken("corte.cancel.cliente." + SUFIJO + "@cafeitsh.mx", "Cliente", Rol.CLIENTE);
+        String tokenCaja = crearUsuarioYToken("corte.cancel.caja." + SUFIJO + "@cafeitsh.mx", "Caja", Rol.CAJA);
+        Producto producto = crearProductoDisponible("Corte cancel " + SUFIJO, "20.00");
+        long pedidoId = crearPedido(tokenCliente, producto.getId());
+        String hoy = LocalDate.now(ZONA).toString();
+
+        String antes = mockMvc.perform(get("/api/caja/corte").param("fecha", hoy)
+                        .header("Authorization", "Bearer " + tokenCaja))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode jsonAntes = om.readTree(antes);
+        BigDecimal totalAntes = new BigDecimal(jsonAntes.get("totalCobrado").asText());
+        long canceladosAntes = jsonAntes.get("cancelados").get("cantidad").asLong();
+        BigDecimal montoCanceladosAntes = new BigDecimal(
+                jsonAntes.get("cancelados").get("montoPagadoCancelado").asText());
+
+        mockMvc.perform(post("/api/pedidos/" + pedidoId + "/pago")
+                        .header("Authorization", "Bearer " + tokenCaja)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"metodoPago\":\"EFECTIVO\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/pedidos/" + pedidoId + "/cancelar")
+                        .header("Authorization", "Bearer " + tokenCaja)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"motivoCancelacion\":\"Sin capacidad\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("CANCELADO"));
+
+        String despues = mockMvc.perform(get("/api/caja/corte").param("fecha", hoy)
+                        .header("Authorization", "Bearer " + tokenCaja))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode jsonDespues = om.readTree(despues);
+        assertThat(new BigDecimal(jsonDespues.get("totalCobrado").asText()))
+                .isEqualByComparingTo(totalAntes);
+        assertThat(jsonDespues.get("cancelados").get("cantidad").asLong())
+                .isEqualTo(canceladosAntes + 1);
+        assertThat(new BigDecimal(jsonDespues.get("cancelados").get("montoPagadoCancelado").asText()))
+                .isEqualByComparingTo(montoCanceladosAntes.add(new BigDecimal("20.00")));
+    }
+
+    @Test
     void clienteNoPuedeRegistrarPagoNiVerCorte() throws Exception {
         String tokenCliente = crearUsuarioYToken("seg.c." + SUFIJO + "@cafeitsh.mx", "Cliente", Rol.CLIENTE);
         Producto producto = crearProductoDisponible("Seg prod " + SUFIJO, "10.00");
@@ -186,6 +231,8 @@ class ControladorCajaTests {
 
     private long crearPedido(String tokenCliente, Long productoId) throws Exception {
         LocalDateTime ahora = LocalDateTime.now(ZONA).withNano(0);
+        assumeTrue(ahora.toLocalTime().isBefore(LocalTime.parse("23:44")),
+                "Fuera del horario en que se pueden crear pedidos de prueba");
         LocalDateTime entrega = ahora.plusMinutes(30).withSecond(0).withNano(0);
         LocalTime max = LocalTime.parse("23:44");
         if (entrega.toLocalTime().isAfter(max)) {

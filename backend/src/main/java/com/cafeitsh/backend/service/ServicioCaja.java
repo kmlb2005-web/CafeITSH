@@ -66,7 +66,7 @@ public class ServicioCaja {
                     Map.of("metodoPago", "El método de pago es obligatorio"));
         }
 
-        Pedido pedido = pedidos.findById(pedidoId)
+        Pedido pedido = pedidos.findByIdParaActualizar(pedidoId)
                 .orElseThrow(() -> new ExcepcionNegocio("Pedido no encontrado", 404));
 
         if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
@@ -99,7 +99,7 @@ public class ServicioCaja {
                                                              SolicitudCancelacionPedido solicitud,
                                                              String correoUsuario) {
         Usuario actor = obtenerUsuario(correoUsuario);
-        Pedido pedido = pedidos.findById(pedidoId)
+        Pedido pedido = pedidos.findByIdParaActualizar(pedidoId)
                 .orElseThrow(() -> new ExcepcionNegocio("Pedido no encontrado", 404));
 
         validarPermisoCancelacion(pedido, actor);
@@ -148,7 +148,9 @@ public class ServicioCaja {
         LocalDateTime inicio = fechaCorte.atStartOfDay();
         LocalDateTime fin = fechaCorte.plusDays(1).atStartOfDay();
 
-        List<Pago> pagosDelDia = pagos.buscarPorRangoFecha(inicio, fin);
+        List<Pago> pagosDelDia = pagos.buscarPorRangoFecha(inicio, fin).stream()
+                .filter(pago -> pago.getPedido().getEstado() != EstadoPedido.CANCELADO)
+                .toList();
         Map<MetodoPago, BigDecimal> montos = new EnumMap<>(MetodoPago.class);
         Map<MetodoPago, Long> cantidades = new EnumMap<>(MetodoPago.class);
         for (MetodoPago metodo : MetodoPago.values()) {

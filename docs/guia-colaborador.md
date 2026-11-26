@@ -16,7 +16,7 @@ contradicción, esos documentos mandan**.
 
 Si un documento contradice al código, **informar la diferencia y esperar decisión**.
 
-## 2. Estado actual del sistema (24/11/2026)
+## 2. Estado actual del sistema (25/11/2026)
 
 ### Stack
 
@@ -34,9 +34,9 @@ Si un documento contradice al código, **informar la diferencia y esperar decisi
 - **Sprint 1** ✅ — menú: categorías y productos.
 - **Sprint 2** ✅ — pedidos: creación y consulta (horario/ventana configurable; transiciones diferidas).
 - **Sprint 3** ✅ — caja: pago, cancelación y corte básico.
-- **Sprint 4** — cocina: vista de pendientes y transiciones implementadas en la rama
-  `sprint-4-cocina`; pendiente de verificación completa.
-- **Sprint 5** pendiente — ver alcance en docs/sprints.md.
+- **Sprint 4** ✅ — cocina: vista de pendientes y transiciones hasta `ENTREGADO`,
+  verificado con 99 pruebas en verde y `mvnw.cmd package` BUILD SUCCESS.
+- **Sprint 5** ⏳ pendiente — ver alcance en docs/sprints.md.
 
 ### Tablas y migraciones
 
@@ -86,13 +86,13 @@ Si un documento contradice al código, **informar la diferencia y esperar decisi
 
 ### Pruebas
 
-- **83 pruebas** confirmadas en verde en Sprint 3 (`mvnw.cmd test`) contra la BD real — no hay H2 ni Testcontainers.
-- **8 pruebas unitarias** de `ServicioCocinaTests` ejecutadas en verde en Sprint 4.
-- **5 pruebas de integración** de `ControladorCocinaTests` escritas, pendientes de ejecutar con MySQL real.
+- **99 pruebas** confirmadas en verde al cierre del Sprint 4 (`mvnw.cmd test` y
+  `mvnw.cmd package`) contra la BD real — no hay H2 ni Testcontainers.
 - Archivos: `ControladorAutenticacionTests` (9), `ControladorMenuTests` (13),
-  `ControladorPedidoTests` (9), `ControladorCajaTests` (5), `ServicioJwtTests` (6), `ServicioCategoriaTests` (8),
-  `ServicioProductoTests` (8), `ServicioPedidoTests` (17), `ServicioCajaTests` (7), `BackendApplicationTests` (1),
-  `ServicioCocinaTests` (8), `ControladorCocinaTests` (5).
+  `ControladorPedidoTests` (9), `ControladorCajaTests` (6), `ControladorCocinaTests` (5),
+  `ServicioJwtTests` (6), `ServicioCategoriaTests` (8), `ServicioProductoTests` (8),
+  `ServicioPedidoTests` (17), `ServicioCajaTests` (8), `ServicioCocinaTests` (9),
+  `BackendApplicationTests` (1).
 
 ## 3. Cómo se trabaja (ciclo por sprint)
 

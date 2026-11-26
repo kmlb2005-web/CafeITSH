@@ -3,7 +3,7 @@
 Registro de los sprints terminados del backend. Cada sprint se cierra con
 sus pruebas ejecutadas y queda pendiente de autorización para el siguiente.
 
-Estado general: **Sprints 0, 1, 2 y 3 completados** · Sprint 4 implementado, pendiente de verificación completa · Frontend pendiente (sin proyecto Flutter aún).
+Estado general: **Sprints 0, 1, 2, 3 y 4 completados y verificados** · Sprint 5 pendiente (documentación de endpoints y CORS de producción) · Frontend pendiente (sin proyecto Flutter aún).
 
 ---
 
@@ -390,13 +390,13 @@ mvnw.cmd package   → BUILD SUCCESS (jar backend-0.0.1-SNAPSHOT.jar)
 
 ---
 
-## Sprint 4 — Cocina: vista de pendientes y transiciones (24/11/2026)
+## Sprint 4 — Cocina: vista de pendientes y transiciones (24–25/11/2026)
 
 ### Estado
 
-**Implementado, no cerrado.** Falta ejecutar la suite completa y `mvnw.cmd package`
-con pruebas contra MySQL real; en este entorno no hay Docker, `database/.env` ni
-servicio MySQL en el puerto 3307.
+**Completado y verificado el 25/11/2026.** Suite completa y `mvnw.cmd package`
+ejecutados contra MySQL real en Docker (puerto 3307) con 99 pruebas en verde.
+Código integrado en `main`; solo queda Sprint 5.
 
 ### Objetivo
 
@@ -417,17 +417,27 @@ resueltas con la patrocinadora).
 | `backend/.../service/ServicioCocina.java` | Vista de pendientes y reglas de transición por rol/estado |
 | `backend/.../controller/ControladorCocina.java` | Endpoints de vista y transiciones |
 | `backend/src/test/.../service/ServicioCocinaTests.java` | 8 pruebas unitarias |
-| `backend/src/test/.../controller/ControladorCocinaTests.java` | 5 pruebas de integración MockMvc (escritas, pendientes de ejecutar) |
+| `backend/src/test/.../controller/ControladorCocinaTests.java` | 5 pruebas de integración MockMvc |
 
 ### Archivos modificados
 
 - `backend/.../repository/PedidoRepository.java`: consulta
   `buscarPendientesPreparacion()` con estados `PAGADO` ordenados por
-  `fechaHoraEntrega` y `id`.
+  `fechaHoraEntrega` y `id`; además `findByIdParaActualizar` con
+  `@Lock(LockModeType.PESSIMISTIC_WRITE)` para pago, cancelación y transiciones.
 - `backend/.../config/ConfiguracionSeguridad.java`: `GET /api/cocina/**` para
   COCINA/ADMIN; `POST /api/pedidos/*/en-preparacion` y `/listo` para
-  COCINA/ADMIN; `POST /api/pedidos/*/entregado` para COCINA/CAJA/ADMIN.
-- `docs/sprints.md`, `AGENTS.md`, `docs/guia-colaborador.md`: estado y endpoints.
+  COCINA/ADMIN; `POST /api/pedidos/*/entregado` para COCINA/CAJA/ADMIN. Las
+  respuestas 401/403 usan `RespuestaError.simple` serializado con Jackson 3.
+- `backend/.../service/ServicioCaja.java`: usa el bloqueo al pagar/cancelar y
+  excluye del corte los pagos cuyo pedido fue cancelado.
+- `backend/.../service/ServicioCocina.java`: usa el bloqueo en `transicionar`.
+- `backend/.../dto/RespuestaError.java`: `@JsonInclude(NON_NULL)` para no exponer
+  `campos` vacío.
+- `backend/src/test/...`: stubs/verificaciones del repositorio con bloqueo,
+  cobertura de ADMIN en cocina, corte con pago cancelado y protección de fechas
+  cercanas al cierre (`assumeTrue`).
+- `docs/sprints.md`, `AGENTS.md`, `docs/guia-colaborador.md`, `README.md`: estado y endpoints.
 
 ### Endpoints agregados
 
@@ -442,14 +452,19 @@ resueltas con la patrocinadora).
 
 ```cmd
 cd backend
-mvnw.cmd -DskipTests compile          → COMPILACIÓN EXITOSA
-mvnw.cmd test -Dtest=ServicioCocinaTests → Tests run: 8, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS
-mvnw.cmd -DskipTests package          → BUILD SUCCESS (backend-0.0.1-SNAPSHOT.jar)
+set DB_PASSWORD=<valor de database/.env>
+set JWT_SECRET=<secreto >= 32 caracteres>
+mvnw.cmd test      → Tests run: 99, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS
+mvnw.cmd package   → Tests run: 99, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS
 ```
 
-**No ejecutado:** `mvnw.cmd test` completo ni `mvnw.cmd package` con pruebas.
-Requiere MySQL en `3307`, `DB_PASSWORD` y `JWT_SECRET`; no estaban disponibles.
-Las 5 pruebas de integración de `ControladorCocinaTests` tampoco se ejecutaron.
+`mvnw.cmd package` generó `backend\target\backend-0.0.1-SNAPSHOT.jar`. Ejecutado
+contra MySQL real en Docker (`cafeitsh-mysql`, host `3307`) y Flyway `V1`–`V4`
+aplicadas. Durante la verificación se corrigió el import de `ObjectMapper` en
+`ConfiguracionSeguridad`: Spring Boot 4 usa Jackson 3 (`tools.jackson.databind`),
+mientras los tests instancian Jackson 2 directamente. El ADMIN inicial se validó
+en una BD temporal limpia (`cafeitsh_init_test`, eliminada después); la BD
+principal conserva los datos generados por las suites y no se borraron filas.
 
 ### Decisiones tomadas
 
@@ -464,10 +479,21 @@ Las 5 pruebas de integración de `ControladorCocinaTests` tampoco se ejecutaron.
    auditoría específica de cocina.
 6. **Cancelación sin cambios:** un pedido `PAGADO` que cocina no pueda preparar
    se cancela desde caja antes de iniciar preparación, según `specs/caja/spec.md`.
+7. **Concurrencia:** pago, cancelación y transiciones usan `findByIdParaActualizar`
+   con bloqueo pesimista para evitar dos operaciones simultáneas sobre el mismo pedido.
+8. **Corte:** un pago perteneciente a un pedido cancelado se contabiliza solo en
+   `cancelados`; no suma al total ni a `cantidadPagos` del corte.
+9. **Errores uniformes:** 401 y 403 devuelven `{mensaje, timestamp}` a través de
+   `RespuestaError.simple`, sin el campo `campos`.
+10. **Pruebas de integración:** se protegió el helper de fechas con `assumeTrue`
+    cuando la ventana de cierre es menor a 15 minutos; en la ejecución real no
+    hubo omitidos.
 
 ### Pendientes / notas
 
-- Ejecutar `mvnw.cmd test` y `mvnw.cmd package` completos con MySQL real.
-- Ratificar el cierre del Sprint 4 en la bitácora después de la verificación.
-- CORS sigue restringido a orígenes de desarrollo (Sprint 5).
-- Frontend y `docs/endpoints-api.md` quedan para Sprint 5.
+- Sprint 5: crear `docs/endpoints-api.md` con los contratos para el frontend y
+  revisar la configuración de CORS para producción; no se hicieron cambios de
+  CORS en este sprint.
+- El frontend sigue sin proyecto Flutter.
+- Los datos generados por las suites permanecen en `cafeitsh_db`; no se borraron.
+- `database/.env.example` conserva valores de ejemplo, nunca credenciales reales.

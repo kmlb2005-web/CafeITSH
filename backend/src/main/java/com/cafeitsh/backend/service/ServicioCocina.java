@@ -60,7 +60,7 @@ public class ServicioCocina {
                                          EstadoPedido estadoOrigen, EstadoPedido estadoDestino) {
         Usuario actor = obtenerUsuario(correoUsuario);
         exigirRoles(actor, rolesPermitidos);
-        Pedido pedido = pedidos.findById(pedidoId)
+        Pedido pedido = pedidos.findByIdParaActualizar(pedidoId)
                 .orElseThrow(() -> new ExcepcionNegocio("Pedido no encontrado", 404));
         if (pedido.getEstado() != estadoOrigen) {
             throw new ExcepcionNegocio(

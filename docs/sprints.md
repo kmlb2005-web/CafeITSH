@@ -1,7 +1,7 @@
 # Plan: Backend cafeITSH — por sprints
 
 > Plan original acordado con el equipo. Reproducido tal cual fue aprobado.
-> **Estado (24/11/2026):** Sprints 0, 1, 2 y 3 completados; Sprint 4 implementado, pendiente de verificación completa — detalle en `docs/bitacora-desarrollo.md`.
+> **Estado (25/11/2026):** Sprints 0, 1, 2, 3 y 4 completados y verificados; Sprint 5 pendiente — detalle en `docs/bitacora-desarrollo.md`.
 
 **Regla de ritmo:** cada módulo = un sprint. Al terminar un sprint entrego reporte + documentación, y **espero tu autorización explícita** antes de tocar el siguiente. Sin autorización, no avanzo.
 
@@ -54,30 +54,33 @@ Spec → aprobación → pago, cancelación, corte básico → pruebas → repor
   - ¿Hay reembolsos o ajustes manuales?
 - **Criterio de cierre:** igual que Sprint 2.
 
-## Sprint 4 — Cocina (implementado, pendiente de verificación)
+## Sprint 4 — Cocina ✅ completado
 
 Plan original: Spec → aprobación → transiciones En preparación → Listo → pruebas → reporte.
 
-**Avance (24/11/2026):** spec aprobada en `specs/cocina/spec.md`; implementados
+**Cierre (25/11/2026):** spec aprobada en `specs/cocina/spec.md`; implementados
 `GET /api/cocina/pedidos` y las transiciones a `EN_PREPARACION`, `LISTO` y
 `ENTREGADO`. Reglas aprobadas: solo desde `PAGADO`, sin saltos, COCINA/ADMIN en
-preparación y listo, y COCINA/CAJA/ADMIN en entrega. 8 pruebas unitarias en verde;
-suite completa y `mvnw.cmd package` con pruebas pendientes por falta de MySQL/Docker.
+preparación y listo, y COCINA/CAJA/ADMIN en entrega. Verificado con 99 pruebas en
+verde y `mvnw.cmd package` BUILD SUCCESS contra MySQL real (Docker, puerto 3307).
 
 - **Alcance implementado:**
   - `GET /api/cocina/pedidos`: pedidos `PAGADO` ordenados por hora de entrega.
   - `POST /api/pedidos/{id}/en-preparacion` y `/listo` (COCINA/ADMIN).
   - `POST /api/pedidos/{id}/entregado` (COCINA/CAJA/ADMIN).
   - Sin migración nueva, sin notificaciones y sin cambios en cancelación de caja.
+- **Ajustes de cierre:** bloqueo pesimista en pago/cancelación/transiciones,
+  corte que no suma pagos de pedidos cancelados, errores 401/403 con la misma
+  forma `{mensaje, timestamp}` y cobertura de ADMIN en la vista de cocina.
 - **Depende de:** Sprint 2 (pedidos) y Sprint 3 (estado Pagado como puerta de entrada a cocina).
 - **Decisiones cerradas:**
   - No: un pedido no pagado no puede entrar a preparación; solo se acepta `PAGADO`.
   - No: no se permiten saltos de estado.
   - `ENTREGADO` lo registra COCINA, CAJA o ADMIN desde `LISTO`, al entregar el pedido.
   - Solo consulta: sin notificaciones automáticas al cliente en este sprint.
-- **Criterio de cierre:** igual que Sprint 2; aún pendiente de verificación completa.
+- **Criterio de cierre:** `mvnw.cmd test` (99 pruebas) y `mvnw.cmd package` en verde, bitácora actualizada.
 
-## Sprint 5 — Cierre
+## Sprint 5 — Cierre ⏳ pendiente
 
 Suite verde completa + `docs/endpoints-api.md` (documentación de endpoints para el frontend) → recién ahí pasamos a ver el frontend.
 

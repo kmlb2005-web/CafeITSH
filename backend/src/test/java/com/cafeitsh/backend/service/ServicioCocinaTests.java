@@ -58,6 +58,20 @@ class ServicioCocinaTests {
     }
 
     @Test
+    void adminTambienListaPedidosPendientes() {
+        Usuario admin = usuario(1L, "admin@cafeitsh.mx", Rol.ADMIN);
+        Pedido pedido = pedido(11L, EstadoPedido.PAGADO);
+        RespuestaPedido respuesta = respuesta(11L, EstadoPedido.PAGADO);
+        when(repositorioUsuarios.findByCorreo("admin@cafeitsh.mx")).thenReturn(Optional.of(admin));
+        when(repositorioPedidos.buscarPendientesPreparacion()).thenReturn(List.of(pedido));
+        when(servicioPedido.aRespuesta(pedido)).thenReturn(respuesta);
+
+        List<RespuestaPedido> pendientes = servicio.listarPendientes("admin@cafeitsh.mx");
+
+        assertThat(pendientes).containsExactly(respuesta);
+    }
+
+    @Test
     void cajaNoPuedeListarPedidosPendientes() {
         Usuario caja = usuario(3L, "caja@cafeitsh.mx", Rol.CAJA);
         when(repositorioUsuarios.findByCorreo("caja@cafeitsh.mx")).thenReturn(Optional.of(caja));
@@ -73,13 +87,14 @@ class ServicioCocinaTests {
         Usuario cocina = usuario(2L, "cocina@cafeitsh.mx", Rol.COCINA);
         Pedido pedido = pedido(10L, EstadoPedido.PAGADO);
         when(repositorioUsuarios.findByCorreo("cocina@cafeitsh.mx")).thenReturn(Optional.of(cocina));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
         when(repositorioPedidos.save(pedido)).thenReturn(pedido);
         when(servicioPedido.aRespuesta(pedido)).thenReturn(null);
 
         servicio.iniciarPreparacion(10L, "cocina@cafeitsh.mx");
 
         assertThat(pedido.getEstado()).isEqualTo(EstadoPedido.EN_PREPARACION);
+        verify(repositorioPedidos).findByIdParaActualizar(10L);
     }
 
     @Test
@@ -87,7 +102,7 @@ class ServicioCocinaTests {
         Usuario admin = usuario(1L, "admin@cafeitsh.mx", Rol.ADMIN);
         Pedido pedido = pedido(10L, EstadoPedido.EN_PREPARACION);
         when(repositorioUsuarios.findByCorreo("admin@cafeitsh.mx")).thenReturn(Optional.of(admin));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
         when(repositorioPedidos.save(pedido)).thenReturn(pedido);
         when(servicioPedido.aRespuesta(pedido)).thenReturn(null);
 
@@ -101,7 +116,7 @@ class ServicioCocinaTests {
         Usuario caja = usuario(3L, "caja@cafeitsh.mx", Rol.CAJA);
         Pedido pedido = pedido(10L, EstadoPedido.LISTO);
         when(repositorioUsuarios.findByCorreo("caja@cafeitsh.mx")).thenReturn(Optional.of(caja));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
         when(repositorioPedidos.save(pedido)).thenReturn(pedido);
         when(servicioPedido.aRespuesta(pedido)).thenReturn(null);
 
@@ -126,7 +141,7 @@ class ServicioCocinaTests {
         Usuario cocina = usuario(2L, "cocina@cafeitsh.mx", Rol.COCINA);
         Pedido pedido = pedido(10L, EstadoPedido.PENDIENTE);
         when(repositorioUsuarios.findByCorreo("cocina@cafeitsh.mx")).thenReturn(Optional.of(cocina));
-        when(repositorioPedidos.findById(10L)).thenReturn(Optional.of(pedido));
+        when(repositorioPedidos.findByIdParaActualizar(10L)).thenReturn(Optional.of(pedido));
 
         assertThatThrownBy(() -> servicio.iniciarPreparacion(10L, "cocina@cafeitsh.mx"))
                 .isInstanceOf(ExcepcionNegocio.class)
@@ -139,7 +154,7 @@ class ServicioCocinaTests {
     void pedidoInexistenteDevuelve404() {
         Usuario cocina = usuario(2L, "cocina@cafeitsh.mx", Rol.COCINA);
         when(repositorioUsuarios.findByCorreo("cocina@cafeitsh.mx")).thenReturn(Optional.of(cocina));
-        when(repositorioPedidos.findById(99L)).thenReturn(Optional.empty());
+        when(repositorioPedidos.findByIdParaActualizar(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> servicio.iniciarPreparacion(99L, "cocina@cafeitsh.mx"))
                 .isInstanceOf(ExcepcionNegocio.class)
