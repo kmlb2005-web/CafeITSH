@@ -80,7 +80,7 @@ verde y `mvnw.cmd package` BUILD SUCCESS contra MySQL real (Docker, puerto 3307)
   - Solo consulta: sin notificaciones automáticas al cliente en este sprint.
 - **Criterio de cierre:** `mvnw.cmd test` (99 pruebas) y `mvnw.cmd package` en verde, bitácora actualizada.
 
-## Sprint 5 — Cierre ⏳ pendiente
+## Sprint 5 — Cierre 🔧 implementado, pendiente de verificación con MySQL
 
 Suite verde completa + `docs/endpoints-api.md` (documentación de endpoints para el frontend) → recién ahí pasamos a ver el frontend.
 
@@ -88,6 +88,7 @@ Suite verde completa + `docs/endpoints-api.md` (documentación de endpoints para
 - **Depende de:** Sprints 2, 3 y 4.
 - **Preguntas abiertas:** si se añaden funcionalidades transversales (estadísticas, reportes) decidir si entran aquí o en un sprint extra.
 - **Regla de arranque:** no se implementa sin spec aprobada y autorización explícita; el frontend se abordará después con su propia spec.
+- **Implementado (27/11/2026, spec en `specs/cierre/spec.md`):** `docs/endpoints-api.md` con los 27 endpoints; CORS configurable con `cafeitsh.cors.origenes-permitidos` (por defecto solo `localhost`, el frontend aún no tiene dominio); `ConfiguracionCorsTests`. Falta ejecutar `mvnw.cmd test` y `mvnw.cmd package` con MySQL arriba.
 
 ---
 

@@ -518,3 +518,18 @@ Correcciones aplicadas (solo documentación, sin cambios de código, migraciones
 Pendiente fuera del Sprint 4: Sprint 5 (sin spec aprobada), `docs/endpoints-api.md`, CORS de producción y proyecto Flutter. `.specify/memory/contitution.md` se conserva sin cambios.
 
 Estado Git antes de esta corrección: `main` = `origin/main` @ `77ec8ae23bd0699606818d3fc6ee6aa62dd55883`, árbol limpio; `database/.env` ignorado y `backend/target/` ignorado.
+
+---
+
+## Sprint 5 — Cierre del backend (27/11/2026)
+
+- **Objetivo:** documentar la API para el frontend y hacer configurable el CORS.
+- **Spec asociada:** `specs/cierre/spec.md`.
+- **Archivos creados:** `specs/cierre/spec.md`, `docs/endpoints-api.md`, `backend/src/test/java/com/cafeitsh/backend/config/ConfiguracionCorsTests.java`.
+- **Archivos modificados:** `ConfiguracionSeguridad.java` (orígenes CORS leídos de propiedad), `application.yaml` (`cafeitsh.cors.origenes-permitidos`), `docs/sprints.md`.
+- **Endpoints agregados:** ninguno.
+- **Migraciones:** ninguna.
+- **Decisiones:** el frontend aún no tiene dominio, así que la lista por defecto conserva `localhost` (3000, 5173, 8080, 8081); se sustituirá por configuración al desplegar. Nunca `*`. Sin `PATCH`. Sin estadísticas ni reportes extra.
+- **Pruebas ejecutadas:** pendiente. No se pudo ejecutar `mvnw.cmd test` ni `mvnw.cmd package` porque MySQL (Docker) no estaba levantado y `database/.env` no existe en este equipo.
+- **Pendientes:** ejecutar la verificación completa con MySQL arriba y registrar el resultado aquí.
+

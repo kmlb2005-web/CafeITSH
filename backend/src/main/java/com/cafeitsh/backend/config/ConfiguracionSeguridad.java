@@ -4,6 +4,7 @@ import com.cafeitsh.backend.dto.RespuestaError;
 import com.cafeitsh.backend.security.FiltroJwt;
 import tools.jackson.databind.ObjectMapper;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -29,10 +30,15 @@ public class ConfiguracionSeguridad {
 
     private final FiltroJwt filtroJwt;
     private final ObjectMapper objectMapper;
+    private final List<String> origenesPermitidos;
 
-    public ConfiguracionSeguridad(FiltroJwt filtroJwt, ObjectMapper objectMapper) {
+    public ConfiguracionSeguridad(
+            FiltroJwt filtroJwt,
+            ObjectMapper objectMapper,
+            @Value("${cafeitsh.cors.origenes-permitidos}") List<String> origenesPermitidos) {
         this.filtroJwt = filtroJwt;
         this.objectMapper = objectMapper;
+        this.origenesPermitidos = origenesPermitidos;
     }
 
     @Bean
@@ -85,17 +91,14 @@ public class ConfiguracionSeguridad {
     }
 
     /**
-     * Orígenes permitidos: solo entorno de desarrollo (Flutter web en el
-     * navegador del mismo equipo). Restringir antes de producción.
+     * Orígenes permitidos: se leen de {@code cafeitsh.cors.origenes-permitidos}
+     * (por defecto, solo {@code localhost} de desarrollo). Al desplegar, se
+     * reemplazan por el dominio real del frontend mediante configuración.
      */
     @Bean
     public CorsConfigurationSource fuenteCors() {
         CorsConfiguration configuracion = new CorsConfiguration();
-        configuracion.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://localhost:8080",
-                "http://localhost:8081"));
+        configuracion.setAllowedOrigins(origenesPermitidos);
         configuracion.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuracion.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
